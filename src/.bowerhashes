@@ -57,7 +57,7 @@
     "src/vendors/htmlcanvas/build/html2canvas.js": "d13063b4e7bdf2a4a37c0d4102aba1f010e369b1f421154e0a78b040bead01c3",
     "src/vendors/counterwebdeps/js/external/mnemonic.js": "463b7bb1c2bc0cc3824106a4be68ea2ff166c667fbb39379a417ac2dda63a18a",
     "src/vendors/counterwebdeps/js/external/qrcode.js": "3f7944d28ba419256acf5cdfc5300cf4d519f1f65065305e62e6080d4b8e53e1",
-    "src/vendors/counterwebdeps/js/consts.js": "8a86b7e377ed246c6604d607dd8a4b880c6905d6cf6e7a6264f6f3d6f99a6dd3",
+    "src/vendors/counterwebdeps/js/consts.js": "4e50b8e3957b5571d8e4273dc00c1ac9a9175c206df02e600552a056dd11752d",
     "src/vendors/counterwebdeps/js/util.generic.js": "3db0692752e2fbb14eb166699869fcc3be39b7b82730941f24012ded519a180d",
     "src/vendors/counterwebdeps/js/util.analytics.js": "e2ae8dd7b29ab24b2b5265b139bd558a90b470eb639a6bd7ad1ffd29c4826a53",
     "src/vendors/counterwebdeps/js/util.bitcore.js": "d33f3f822cf1861f90464060ba4146d7a27f16de798510a1eead898b02e90411",
