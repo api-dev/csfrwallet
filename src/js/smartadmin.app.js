@@ -136,7 +136,7 @@ $(document).ready(function() {
     $.root_.removeClass('search-mobile');
   });
 
-  //COUNTERWALLET: START MOD
+  //CSFRWALLET: START MOD
   $('.activity-dropdown').click(function(e) {
     var $this = $(this);
 
@@ -164,7 +164,7 @@ $(document).ready(function() {
 
     e.preventDefault();
   });
-  //COUNTERWALLET: END MOD
+  //CSFRWALLET: END MOD
 
   $(document).mouseup(function(e) {
     if (!$('.ajax-dropdown').is(e.target)// if the target of the click isn't the container...
@@ -251,9 +251,9 @@ $(document).ready(function() {
    */
 
   function logout() {
-    //COUNTERWALLET: START MOD
+    //CSFRWALLET: START MOD
     location.reload(false); //this will take care of everything for us :)
-    //COUNTERWALLET: END MOD
+    //CSFRWALLET: END MOD
   }
 
   /*
@@ -319,7 +319,7 @@ $(document).ready(function() {
 
       var elem = $(this);
       elems = elems.add(elem);
-      //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)      
+      //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)      
       try {
         $.data(this, str_data, {
           w : elem.width(),
@@ -331,7 +331,7 @@ $(document).ready(function() {
           h : $(elem[0].container).height()
         });
       }
-      //COUNTERWALLETD: END MOD
+      //CSFRWALLETD: END MOD
       
       if (elems.length === 1) {
         loopy();
@@ -358,7 +358,7 @@ $(document).ready(function() {
 
       function new_handler(e, w, h) {
         var elem = $(this), data = $.data(this, str_data);
-        //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)
+        //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)
         try {
           data.w = w !== undefined ? w : elem.width();
           data.h = h !== undefined ? h : elem.height();
@@ -366,7 +366,7 @@ $(document).ready(function() {
           data.w = w !== undefined ? w : $(elem[0].container).width();
           data.h = h !== undefined ? h : $(elem[0].container).height();
         }
-        //COUNTERWALLETD: END MOD
+        //CSFRWALLETD: END MOD
 
         old_handler.apply(this, arguments);
       };
@@ -383,7 +383,7 @@ $(document).ready(function() {
   function loopy() {
     timeout_id = window[str_setTimeout](function() {
       elems.each(function() {
-        //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)
+        //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)
         //var elem = $(this), width = elem.width(), height = elem.height(), data = $.data(this, str_data);
         var elem = $(this);
         var width = null;
@@ -396,7 +396,7 @@ $(document).ready(function() {
           height = $(elem[0].container).height(); 
         }
         var data = $.data(this, str_data);
-        //COUNTERWALLETD: END MOD
+        //CSFRWALLETD: END MOD
 
         if (width !== data.w || height !== data.h) {
           elem.trigger(str_resize, [data.w = width, data.h = height]);
@@ -430,19 +430,19 @@ function nav_page_height() {
     $.left_panel.css('min-height', setHeight + 'px');
     $.root_.css('min-height', setHeight + $.navbar_height + 'px');
 
-    //COUNTERWALLETD: START MOD
+    //CSFRWALLETD: START MOD
     $('#chatPane').css('height', windowHeight + 'px');
     $('#chatContentDiv').css('height', (windowHeight - 50 - 40 - 20) + 'px');
     $('#chatContentInnerDiv').slimScroll({ height: 'auto' });
-    //COUNTERWALLETD: END MOD
+    //CSFRWALLETD: END MOD
   } else {
     $.left_panel.css('min-height', windowHeight + 'px');
     $.root_.css('min-height', windowHeight + 'px');
-    //COUNTERWALLETD: START MOD
+    //CSFRWALLETD: START MOD
     $('#chatPane').css('height', windowHeight + 'px');
     $('#chatContentDiv').css('height', (windowHeight - 50 - 40 - 20) + 'px');
     $('#chatContentInnerDiv').slimScroll({ height: 'auto' });
-    //COUNTERWALLETD: END MOD
+    //CSFRWALLETD: END MOD
   }
 }
 
@@ -1175,7 +1175,7 @@ window.loadGoogleMaps = function() {
  * loadScript("js/my_lovely_script.js", myPrettyCode);
  */
 
-//COUNTERWALLET: START MOD
+//CSFRWALLET: START MOD
 function loadScript(scriptName, callback) {
   var scriptID = "script_" + scriptName.replace(/\//g, "__").replace(/\.js/g, "")
   if($("#" + scriptID).length == 0 || IS_DEV) {
@@ -1199,7 +1199,7 @@ function loadScript(scriptName, callback) {
     callback();
   }
 }
-//COUNTERWALLET: END MOD
+//CSFRWALLET: END MOD
 
 /* ~ END: LOAD SCRIPTS */
 
@@ -1286,12 +1286,12 @@ function checkURL() {
   container = $('#content');
   // Do this if url exists (for page refresh, etc...)
   
-  //COUNTERWALLET: START MOD
+  //CSFRWALLET: START MOD
   //console.log("HERE, url: " + url);
   //console.log("HERE, login pane hidden?: " + $('#logon').is(':hidden'));
   //if (url) {
   if (url && $('#logon').is(':hidden')) {
-  //COUNTERWALLET: END MOD
+  //CSFRWALLET: END MOD
   
     // remove all active class
     $('nav li.active').removeClass("active");
@@ -1306,15 +1306,15 @@ function checkURL() {
     // parse url to jquery
     loadURL(url + location.search, container);
   } else {
-    //COUNTERWALLET: START MOD
+    //CSFRWALLET: START MOD
     //Dont load anything, just reset any hash
     //window.location.hash = '';
-    //COUNTERWALLET: END MOD
+    //CSFRWALLET: END MOD
   }
 
 }
 
-//COUNTERWALLET: START MOD
+//CSFRWALLET: START MOD
 function loadPage(url, container) {
   $.ajax({
     type : "GET",
@@ -1349,9 +1349,9 @@ function loadPage(url, container) {
     async : false
   });
 }
-//COUNTERWALLET: END MOD
+//CSFRWALLET: END MOD
 
-//COUNTERWALLET: START MOD
+//CSFRWALLET: START MOD
 function loadURL(url, container) {
 
   checkCountry(url, function() {
@@ -1359,7 +1359,7 @@ function loadURL(url, container) {
   });
 
 }
-//COUNTERWALLET: END MOD
+//CSFRWALLET: END MOD
 
 // UPDATE BREADCRUMB
 function drawBreadCrumb() {
@@ -1451,7 +1451,7 @@ $('body').on('click', function(e) {
 });
 
 
-//COUNTERWALLET: START MOD
+//CSFRWALLET: START MOD
 //THIS FUNCTION MOVED OVER FROM datatables.html, and changed the selectors to use classes (e.g. table.dt_basic) instead of IDs (#dt_basic)
 function runDataTables(specificTableID, destroyOption, extraProps) {
   if(typeof(destroyOption)==='undefined') destroyOption = true;
@@ -1559,4 +1559,4 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort, {
         return naturalSort(a,b) * -1;
     }
 } );
-//COUNTERWALLET: END MOD
+//CSFRWALLET: END MOD

@@ -1,7 +1,7 @@
 {
   "name": "csfrwallet",
   "description": "cSFRwallet",
-  "author": "Counterparty and SFRDirect development teams",
+  "author": "cSFR and SFRDirect development teams",
   "version": "1.4.0",
   "main": "build/index.html",
   "repository": { 

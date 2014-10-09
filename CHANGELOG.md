@@ -5,7 +5,7 @@
 * Added page-level help for balances and exchanges (with more coming in the future, as necessary)
 
 **Fixes:**
-* Significant performance and reliability improvements (on the counterblockd side)
+* Significant performance and reliability improvements (on the csfrblockd side)
 * Numerous minor fixes
 * Minor UI tweaks
 
@@ -14,7 +14,7 @@
 * Added Rock-Paper-Scissors
 * Added Zeroconf support (show pending balances for assets)
 * Added IP-based blocking for betting, RPS and dividend issuance. We are currently blocking people
-  with US-based IP addresses from using these features on counterwallet.co itself.
+  with US-based IP addresses from using these features on csfrwallet.co itself.
 
 **Fixes:**
 * Fixed issue with asset name validation (length checking was incorrect)
@@ -83,7 +83,7 @@
 
 ### v0.9.5 ###
 **Enhancements:**
-* implemented asset description json and asset pictures, yay (see https://wiki.counterparty.co/w/Enhanced_Asset_Info_in_Counterwallet)
+* implemented asset description json and asset pictures, yay (see https://wiki.csfr.co/w/Enhanced_Asset_Info_in_cSFRwallet)
 * added 7 sample moving average to price charts
 * show # characters remaining when typing asset description
 * we now wait 6 blocks on an order match before doing a BTCpay (we do this for protection against a reorg making an order match disappear)
@@ -107,8 +107,8 @@
     
 ### v0.9.4 ###
 **Enhancements:**
-* when wanting to do a trade where BTC we will purchased (i.e. a btcpay is required), show the online status of counterwallet users (as available) with trades appearing that offer to sell BTC. this is important because BTCpays must complete in a certain (shortish) period of time, and trading with a user that is marked online has a higher percentage chance of fully going through. online status is tracked by the server in an anonymous fashion (i.e. using the walletID identifier). Note that this change does not work with old trade (it will only work with trades that are made *after* this update is put into place)
-* added /online command to chat, which will tell you if the user you specify is online or not (e.g. type "/online cityglut" to see if cityglut currently has counterwallet running).
+* when wanting to do a trade where BTC we will purchased (i.e. a btcpay is required), show the online status of csfrwallet users (as available) with trades appearing that offer to sell BTC. this is important because BTCpays must complete in a certain (shortish) period of time, and trading with a user that is marked online has a higher percentage chance of fully going through. online status is tracked by the server in an anonymous fashion (i.e. using the walletID identifier). Note that this change does not work with old trade (it will only work with trades that are made *after* this update is put into place)
+* added /online command to chat, which will tell you if the user you specify is online or not (e.g. type "/online cityglut" to see if cityglut currently has csfrwallet running).
 * added /msg command to chat for private messaging between handles...e.g. /msg halfcab yo wazzup
 
 **Fixes:**
@@ -131,13 +131,13 @@
 * fixed: if balance was exceeded on buysell tab 2 when entering a overridden unit price, you could move on to the 3rd tab. added a validator to prevent this
 * fixed: if on tab 2 on the buysell page, and open orders are in the open orders table, and you go back to tab 1, and select a different buy asset, an assertion error would be thrown.
 * login page should be scrollable now, and additional css tweaks to make it display better on mobile devices and tablets
-* hopefully fixed a bug where if counterparty/coutnerwalletd were in the process of processng a block at the same time a client made a request, it would log the client out (saying that the server is not caught up to the blockchain)...this check is more tolerant now
+* hopefully fixed a bug where if csfr/coutnerwalletd were in the process of processng a block at the same time a client made a request, it would log the client out (saying that the server is not caught up to the blockchain)...this check is more tolerant now
 
 ### v0.9.2 ###
 **Enhancements:**
-* added the ASSET LEADERBOARD functionality, which shows the top 100 counterparty assets (that have actual trade data)* asset market info is now pre-compiled (i.e. calculated and stored) every 10 minutes, due to the addition of the asset leaderboard* added notification pane messages for bets and broadcasts
+* added the ASSET LEADERBOARD functionality, which shows the top 100 csfr assets (that have actual trade data)* asset market info is now pre-compiled (i.e. calculated and stored) every 10 minutes, due to the addition of the asset leaderboard* added notification pane messages for bets and broadcasts
 * servers store chat history now in database, and added get_chat_history() call. 
-* because of the above, chat history persists between server restarts (so you still get the newest line even if the counterwalletd service needs to be restarted)
+* because of the above, chat history persists between server restarts (so you still get the newest line even if the csfrwalletd service needs to be restarted)
 * fixed up and enhanced the Asset Portfolio page
 
 **Fixes:**
@@ -145,10 +145,10 @@
 * buy/sell: order book display changed to percentages based adaptive display instead of absolute fee based (i.e. works as it should now :) 
 * chat handle completion on tab is now case insensitive
 * choosing your handle when starting a chat for the first time now will tell you if the handle is in use or not
-* fixes for nginx "crash" situation, fix correctly closing unused sockets in counterwalletd in one or two places
+* fixes for nginx "crash" situation, fix correctly closing unused sockets in csfrwalletd in one or two places
 * address sweeping was borked. fixed.
 * chat was totally clearing history after 200 lines when it should have just been removing the first 5 lines
-* 0.9.2.1: bug fix for counterwalletd not properly rebuilding its app_config collection if the cwd DB version went up
+* 0.9.2.1: bug fix for csfrwalletd not properly rebuilding its app_config collection if the cwd DB version went up
 
 ### v0.9.1 ###
 **Enhancements:**

@@ -1,4 +1,4 @@
-//Counterwallet-specific utility functions
+//cSFRwallet-specific utility functions
 
 function feedImageUrl(image_name) {
   var url = cwBaseURLs()[0];

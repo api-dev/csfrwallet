@@ -1,6 +1,6 @@
-Counterblock = {};
+cSFRBlock = {};
 
-Counterblock.getBalances = function(addresses, cwkeys, callback) {
+cSFRBlock.getBalances = function(addresses, cwkeys, callback) {
 
   WALLET.retriveBTCAddrsInfo(addresses, function(btcData) {
     failoverAPI("get_normalized_balances", {'addresses': addresses}, function(assetsData, endpoint) {

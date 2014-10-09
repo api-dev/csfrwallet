@@ -246,7 +246,7 @@ function WalletViewModel() {
     }
 
     if (notAvailable.length > 0) {
-      // else make a query to counterpartyd
+      // else make a query to csfrd
       failoverAPI("get_asset_info", {'assets': notAvailable}, function(assetsInfo, endpoint) {
         for (var a in assetsInfo) {
           assetsDivisibility[assetsInfo[a]['asset']] = assetsInfo[a]['divisible'];
@@ -273,10 +273,10 @@ function WalletViewModel() {
     return _.uniq(assets);
   }
   
-  self.refreshCounterpartyBalances = function(addresses, onSuccess) {
-    //update all counterparty asset balances for the specified address (including XCP)
+  self.refreshcSFRBalances = function(addresses, onSuccess) {
+    //update all csfr asset balances for the specified address (including XCP)
     //Note: after login, this normally never needs to be called (except when adding a watch address),
-    // as counterparty asset balances are updated automatically via the messages feed
+    // as csfr asset balances are updated automatically via the messages feed
     failoverAPI("get_normalized_balances", {'addresses': addresses},
       function(balancesData, endpoint) {
         $.jqlog.debug("Got initial balances: " + JSON.stringify(balancesData));
@@ -293,7 +293,7 @@ function WalletViewModel() {
           if(assets.indexOf(balancesData[i]['asset'])==-1)
           assets.push(balancesData[i]['asset']);
         }
-        // TODO: optimize: assets infos already fetched in get_normalized_balances() in counterblockd
+        // TODO: optimize: assets infos already fetched in get_normalized_balances() in csfrblockd
         failoverAPI("get_asset_info", {'assets': assets}, function(assetsInfo, endpoint) {
 
           failoverAPI("get_escrowed_balances", {'addresses': addresses}, function(escrowedBalances) {
@@ -375,7 +375,7 @@ function WalletViewModel() {
             
           if(pendingActionsHasBTCSend) {
             //see if data[i]['lastTxns'] includes any hashes that exist in the Pending Actions, which
-            // means we MAY be able to remove them from that listing (i.e. they COULD be non-BTC send (i.e. counterparty transactions) though
+            // means we MAY be able to remove them from that listing (i.e. they COULD be non-BTC send (i.e. csfr transactions) though
             //TODO: This is not very efficient when a BTC send is pending... O(n^3)! Although the sample sets are relatively small...
             for(var j=0; j < data[i]['lastTxns'].length; j++) {
               PENDING_ACTION_FEED.remove(data[i]['lastTxns'][j], "sends", true);
@@ -447,7 +447,7 @@ function WalletViewModel() {
   self.signAndBroadcastTxRaw = function(key, unsignedTxHex, onSuccess, onError, verifySourceAddr, verifyDestAddr) {
     assert(verifySourceAddr, "Source address must be specified");
     assert(verifyDestAddr, "Destination address must be specified");
-    //Sign and broadcast a multisig transaction that we got back from counterpartyd (as a raw unsigned tx in hex)
+    //Sign and broadcast a multisig transaction that we got back from csfrd (as a raw unsigned tx in hex)
     //* verifySourceAddr and verifyDestAddr MUST be specified to verify that the txn hash we get back from the server is what we expected. 
     
     $.jqlog.debug("RAW UNSIGNED HEX: " + unsignedTxHex);
@@ -522,9 +522,9 @@ function WalletViewModel() {
   }
   
   /////////////////////////
-  //Counterparty transaction-related
+  //cSFR transaction-related
   self.canDoTransaction = function(address) {
-    /* ensures that the specified address can perform a counterparty transaction */
+    /* ensures that the specified address can perform a csfr transaction */
     var addressObj = self.getAddressObj(address);
     assert(!addressObj.IS_WATCH_ONLY, "Cannot perform this action on a watch only address!");
     

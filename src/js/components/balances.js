@@ -177,7 +177,7 @@ function CreateNewAddressModalViewModel() {
     //save prefs to server
     WALLET.storePreferences(function(data, endpoint) {
       self.shown(false);      
-      WALLET.refreshCounterpartyBalances([newAddress]);
+      WALLET.refreshcSFRBalances([newAddress]);
       WALLET.refreshBTCBalances();
     });
     trackEvent('Balances', self.addressType() == 'normal' ? 'CreateNewAddress' : (
@@ -503,7 +503,7 @@ function SweepModalViewModel() {
         WALLET.retriveBTCAddrsInfo([address], function(data) {
           self.btcBalanceForPrivateKey(0);
           self.txoutsCountForPrivateKey = 0;
-          //TODO: counterblockd return unconfirmedRawBal==0, after fixing we need use unconfirmedRawBal
+          //TODO: csfrblockd return unconfirmedRawBal==0, after fixing we need use unconfirmedRawBal
           var unconfirmedRawBal = data[0]['confirmedRawBal']; 
           if(unconfirmedRawBal > 0) {
             //We don't need to supply asset info to the SweepAssetInDropdownItemModel constructor for BTC
@@ -738,7 +738,7 @@ function SweepModalViewModel() {
           var match = arguments[1].match(/Insufficient saffroncoins at address [^\s]+\. \(Need approximately ([\d]+\.[\d]+) SFR/);
           if (match!=null) {
             $.jqlog.debug(arguments[1]);
-            // if insufficient bitcoins we retry with estimated fees return by counterpartyd
+            // if insufficient bitcoins we retry with estimated fees return by csfrd
             var minEstimateFee = denormalizeQuantity(parseFloat(match[1])) - (self.btcBalanceForPrivateKey() - self.mergeCost);
             $.jqlog.debug('Insufficient fees. Need approximately ' + normalizeQuantity(minEstimateFee));
             if (minEstimateFee > self.btcBalanceForPrivateKey()) {
@@ -902,7 +902,7 @@ function SweepModalViewModel() {
       pubkey: pubkey,
       allow_unconfirmed_inputs: true
     };
-    multiAPIConsensus("create_send", sendData, //can send both BTC and counterparty assets
+    multiAPIConsensus("create_send", sendData, //can send both BTC and csfr assets
       function(unsignedTxHex, numTotalEndpoints, numConsensusEndpoints) {
         
         var signedHex = key.checkAndSignRawTransaction(unsignedTxHex, [self.destAddress()]);

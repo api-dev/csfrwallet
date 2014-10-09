@@ -10,22 +10,22 @@
 
     <noscript>This site requires Javascript. Please enable it, and then try loading the page again.</noscript>
 
-    <!-- build:css css/counterwallet-deps-min.css -->
+    <!-- build:css css/csfrwallet-deps-min.css -->
     <link rel="stylesheet" type="text/css" media="screen" href="vendors/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" media="screen" href="vendors/font-awesome/css/font-awesome.min.css">
     <!-- SmartAdmin Styles -->
     <link rel="stylesheet" type="text/css" media="screen" href="vendors/smartadmin/css/smartadmin-production.css">
     <link rel="stylesheet" type="text/css" media="screen" href="vendors/smartadmin/css/smartadmin-skins.css">
-    <!-- Counterwallet plugin styles -->
+    <!-- cSFRwallet plugin styles -->
     <link rel="stylesheet" type="text/css" href="vendors/jReject/css/jquery.reject.css">
     <link rel="stylesheet" type="text/css" href="vendors/keyboard/css/keyboard.css">
     <link rel="stylesheet" type="text/css" href="vendors/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" type="text/css" href="vendors/select2/select2-bootstrap.css">
     <!-- endbuild -->
 
-    <!-- Counterwallet custom styles -->
-    <!-- build:css css/counterwallet-min.css -->
-    <link rel="stylesheet" type="text/css" media="screen" href="vendors/counterwebdeps/css/default.css">
+    <!-- cSFRwallet custom styles -->
+    <!-- build:css css/csfrwallet-min.css -->
+    <link rel="stylesheet" type="text/css" media="screen" href="vendors/csfrwebdeps/css/default.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/overrides.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/misc.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/components/logon.css">
@@ -265,7 +265,7 @@
             </div>
             <div class="width-max" data-bind="visible: step() == 2">
               <p class="createWalletHeaderText">To avoid having to type the full 12-word passphrase every time you log
-                into Counterwallet, you can <i>optionally</i> use a special <b>Quick Access URL</b> that is produced by entering
+                into cSFRwallet, you can <i>optionally</i> use a special <b>Quick Access URL</b> that is produced by entering
                 a password of your choosing.
               </p>
               <p class="createWalletHeaderText" data-bind="visible: !showQuickAccessFrame()">If you don't know what this means, just click <b>Skip This Step</b> below.</p>
@@ -873,7 +873,7 @@
 
     </div>
 
-    <!-- build:js js/counterwallet-deps-min.js -->
+    <!-- build:js js/csfrwallet-deps-min.js -->
     <script src="vendors/underscore/underscore.js"></script>
     <script src="vendors/underscore.string/lib/underscore.string.js"></script>
     <script src="vendors/jquery/jquery.min.js"></script><!-- Jquery -->
@@ -957,25 +957,25 @@
 
 
 
-    <!-- COUNTERWALLET JS INCLUDES -->
-    <!-- build:js js/counterwallet-min.js -->
+    <!-- CSFRWALLET JS INCLUDES -->
+    <!-- build:js js/csfrwallet-min.js -->
 
-    <!-- counterwebdeps -->
-    <script src="vendors/counterwebdeps/js/external/mnemonic.js"></script>
-    <script src="vendors/counterwebdeps/js/external/qrcode.js"></script>  <!-- from http://d-project.googlecode.com/svn/trunk/misc/qrcode/js/ -->
-    <script src="vendors/counterwebdeps/js/consts.js"></script>
-    <script src="vendors/counterwebdeps/js/util.generic.js"></script>
-    <script src="vendors/counterwebdeps/js/util.analytics.js"></script>
-    <script src="vendors/counterwebdeps/js/util.bitcore.js"></script>
-    <script src="vendors/counterwebdeps/js/util.api.js"></script>
-    <script src="vendors/counterwebdeps/js/util.bitcoin.js"></script>
-    <script src="vendors/counterwebdeps/js/util.knockout.js"></script>
+    <!-- csfrwebdeps -->
+    <script src="vendors/csfrwebdeps/js/external/mnemonic.js"></script>
+    <script src="vendors/csfrwebdeps/js/external/qrcode.js"></script>  <!-- from http://d-project.googlecode.com/svn/trunk/misc/qrcode/js/ -->
+    <script src="vendors/csfrwebdeps/js/consts.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.generic.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.analytics.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.bitcore.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.api.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.bitcoin.js"></script>
+    <script src="vendors/csfrwebdeps/js/util.knockout.js"></script>
 
-    <!-- counterwallet-specific -->
+    <!-- csfrwallet-specific -->
     <script src="js/consts.js"></script>
     <script src="js/util.js"></script>
-    <script src="js/counterwallet.js"></script>
-    <script src="js/counterblock.js"></script>
+    <script src="js/csfrwallet.js"></script>
+    <script src="js/csfrblock.js"></script>
     <script src="js/messagefeed.js"></script>
     <script src="js/components/wallet.js"></script>
     <script src="js/components/wallet_options.js"></script>

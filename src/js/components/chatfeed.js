@@ -488,7 +488,7 @@ function ChatSetHandleModalViewModel() {
     if ($('#startChatBtn').prop("disabled")) {
       return;
     }
-    //Save the handle back at counterblockd
+    //Save the handle back at csfrblockd
     multiAPI("store_chat_handle", {'wallet_id': WALLET.identifier(), 'handle': self.newHandle()}, function(data, endpoint) {
       self.hide();
       CHAT_FEED.showChat();

@@ -30,7 +30,7 @@ function AddressViewModel(type, key, address, initialLabel, armoryPubKey) {
 
   self.assets = ko.observableArray([
     new AssetViewModel({address: address, asset: "SFR"}), //will be updated with data loaded from insight
-    new AssetViewModel({address: address, asset: "cSFR"})  //will be updated with data loaded from counterpartyd
+    new AssetViewModel({address: address, asset: "cSFR"})  //will be updated with data loaded from csfrd
   ]);
   
   self.assetFilter = ko.observable('');

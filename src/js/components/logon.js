@@ -151,7 +151,7 @@ function LogonViewModel() {
       //Set initial block height (will be updated again on each periodic refresh of BTC account balances)
       WALLET.networkBlockHeight(data['block_height']);
       
-      //Initialize the socket.io-driven event feed (notifies us in realtime of new events, as counterparty processes confirmed blocks)
+      //Initialize the socket.io-driven event feed (notifies us in realtime of new events, as csfr processes confirmed blocks)
       MESSAGE_FEED.init(data['last_message_index']);
       //^ set the "starting" message_index, under which we will ignore if received on the messages feed
 
@@ -335,7 +335,7 @@ function LogonViewModel() {
     //updates all balances for all addesses, creating the asset objects on the address if need be
     WALLET.refreshBTCBalances(true, additionalBTCAddresses, function() {
       //^ specify true here to start a recurring get BTC balances timer chain
-      WALLET.refreshCounterpartyBalances(WALLET.getAddressesList(), onSuccess);
+      WALLET.refreshcSFRBalances(WALLET.getAddressesList(), onSuccess);
     });
   }
   

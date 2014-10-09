@@ -65,7 +65,7 @@ NotificationViewModel.calcText = function(category, message) {
     desc = "Order/Bid ID <b>" + message['tx_index'] + "</b> for your address <Ad>" + getAddressLabel(message['source']) + "</Ad> was cancelled";
   } else if(category == "callbacks" || category == "dividend") {
     //See if any of our addresses own any of the specified asset, and if so, notify them of the callback or dividend
-    // NOTE that counterpartyd has automatically already adusted the balances of all asset holders...we just need to notify
+    // NOTE that csfrd has automatically already adusted the balances of all asset holders...we just need to notify
     var addressesWithAsset = WALLET.getAddressesWithAsset(message['asset']);
     if(!addressesWithAsset.length) return;
     if(category == "callbacks") {
