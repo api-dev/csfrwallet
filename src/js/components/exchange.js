@@ -1,7 +1,7 @@
 var BuySellAddressInDropdownItemModel = function(address, label, asset, balance) {
   this.ADDRESS = address;
   this.LABEL = label;
-  this.SELECT_LABEL = (label ? ("<b>" + label + "</b><br/>" + address + "<br/>" + asset + " Bal: " + balance) : (address + "<br/>" + asset + " Bal: " + balance));
+  this.SELECT_LABEL = (label ? ("<b>" + label + "</b><br/>" + address + "<br/>" + asset + " " + i18n.t('bal') + " " + balance) : (address + "<br/>" + asset + " " + i18n.t('bal') + " " + balance));
   this.BALANCE = parseFloat(balance);
 };
 
@@ -13,8 +13,31 @@ ko.validation.rules['ordersIsExistingAssetName'] = {
     });
     return match;
   },
-  message: "Asset doesn't exist."
+  message: i18n.t("asset_doesnt_exist")
 };
+
+ko.validation.rules['baseDivisibilityIsOk'] = {
+  validator: function (value, self) {
+    if (!self.baseAssetIsDivisible() && (value % 1) > 0) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  message: i18n.t("nodivisible_amount_incorrect")
+};
+
+ko.validation.rules['quoteDivisibilityIsOk'] = {
+  validator: function (value, self) {
+    if (!self.quoteAssetIsDivisible() && (value % 1) > 0) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  message: i18n.t("nodivisible_total_incorrect")
+};
+
 ko.validation.registerExtenders();
 
 function ExchangeViewModel() {
@@ -45,7 +68,7 @@ function ExchangeViewModel() {
       validator: function (val, self) {
         return val !== self.asset1();
       },
-      message: 'Same as other asset',
+      message: i18n.t('same_as_other_asset'),
       params: self
     }    
   });
@@ -66,6 +89,9 @@ function ExchangeViewModel() {
     var pair = self.assetPair();
     return pair[0] + "/" + pair[1];
   }, self);
+  self.dispAssetPair.subscribeChanged(function(newValue, prevValue) {
+    self.currentMarketPrice(0);
+  });
   self.baseAsset = ko.computed(function() {
     if(!self.assetPair()) return null;
     return self.assetPair()[0];
@@ -138,10 +164,14 @@ function ExchangeViewModel() {
     required: true,
     isValidPositiveQuantity: self
   });
-  self.sellAmount = ko.observable(0);
+  self.sellAmount = ko.observable(0).extend({
+    required: true,
+    baseDivisibilityIsOk: self
+  });
   self.sellTotal = ko.observable(0).extend({
     required: true,
-    isValidPositiveQuantity: self
+    isValidPositiveQuantity: self,
+    quoteDivisibilityIsOk: self
   });
   self.sellPriceHasFocus = ko.observable();
   self.sellAmountHasFocus = ko.observable();
@@ -219,7 +249,7 @@ function ExchangeViewModel() {
       validator: function (val, self) {
         return parseFloat(val) <= self.availableBalanceForSell();
       },
-      message: 'Amount entered exceeds the address balance.',
+      message: i18n.t('quantity_exceeds_balance'),
       params: self
     }    
   });
@@ -242,12 +272,24 @@ function ExchangeViewModel() {
     return normalizeQuantity(fee_provided);
   });
 
+  self.sellRedeemableFee = ko.observable(normalizeQuantity(2 * MULTISIG_DUST_SIZE));
+
   self.selectBuyOrder = function(order, notFromClick) {
-    var price = new Decimal(order.price);
+    var price = new Decimal(cleanHtmlPrice(order.price));
     var amount1 = new Decimal(self.availableBalanceForSell());
     var amount2 = new Decimal(order.base_depth);
     var amount = amount1.compare(amount2) > 0 ? amount2 : amount1;
-    var total = price.mul(amount);
+    var total;
+
+    if (self.quoteAssetIsDivisible() == self.baseAssetIsDivisible()) {
+      total = price.mul(amount);
+    } else if (self.quoteAssetIsDivisible() && !self.baseAssetIsDivisible()) {
+      amount = Math.floor(amount);
+      total = mulFloat(amount, price);
+    } else if (!self.quoteAssetIsDivisible() && self.baseAssetIsDivisible()) {
+      total = Math.floor(price.mul(amount));
+      amount = divFloat(total, price);
+    }
 
     self.sellPrice(roundAmount(price));
     self.sellAmount(roundAmount(amount));
@@ -260,10 +302,16 @@ function ExchangeViewModel() {
 
   self.setMaxSellAmount = function() {
     var amount = self.availableBalanceForSell();
-    self.sellAmount(amount);
     if (self.sellPrice()) {
-      self.sellTotal(mulFloat(self.sellPrice(), amount));
+      if (self.quoteAssetIsDivisible()) {
+        self.sellTotal(mulFloat(self.sellPrice(), amount)); 
+      } else {
+        var total = Math.floor(mulFloat(self.sellPrice(), amount));
+        self.sellTotal(total);
+        amount = divFloat(total, self.sellPrice());
+      }
     } 
+    self.sellAmount(amount);
   }
 
   self.doSell = function() {
@@ -300,11 +348,16 @@ function ExchangeViewModel() {
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       trackEvent('Exchange', 'Sell', self.dispAssetPair());
       
-      var message = "Your order to sell <b class='notoQuantityColor'>" + self.sellAmount() + "</b>"
-       + " <b class='notoAssetColor'>" + self.baseAsset() + "</b> " + (armoryUTx ? "will be placed" : "has been placed") + ". "; 
-      WALLET.showTransactionCompleteDialog(message + ACTION_PENDING_NOTICE, message, armoryUTx);
+      var message = "";
+      if (armoryUTx) {
+        message = i18n.t("you_sell_order_will_be_placed", self.sellAmount(), self.baseAsset()); 
+      } else {
+        message = i18n.t("you_sell_order_has_been_placed", self.sellAmount(), self.baseAsset()); 
+      }
+
+      WALLET.showTransactionCompleteDialog(message + " " + i18n.t(ACTION_PENDING_NOTICE), message, armoryUTx);
        
-      //if the order involes selling BTC, then we want to notify the servers of our wallet_id so folks can see if our
+      //if the order involes selling SFR, then we want to notify the servers of our wallet_id so folks can see if our
       // wallet is "online", in order to determine if we'd be able to best make the necessary BTCpay
       if(self.baseAsset() == 'SFR' && addressType !== 'armory') {
         multiAPI("record_btc_open_order", {'wallet_id': WALLET.identifier(), 'order_tx_hash': txHash});
@@ -337,18 +390,18 @@ function ExchangeViewModel() {
     estimatedTotalPrice = smartFormat(estimatedTotalPrice);
 
     message  = '<table class="confirmOrderBox">';
-    message += '<tr><td><b>Price: </b></td><td style="text-align:right">' + self.sellPrice() + '</td><td>' + self.quoteAsset() + '/' + self.baseAsset() + '</td></tr>';
-    message += '<tr><td><b>Amount: </b></td><td style="text-align:right">' + self.sellAmount() + '</td><td>' + self.baseAsset() + '</td></tr>';
-    message += '<tr><td><b>Total: </b></td><td style="text-align:right">' + self.sellTotal() + '</td><td>' + self.quoteAsset() + '</td></tr>';
-    message += '<tr><td><b>Real estimated total: </b></td><td style="text-align:right">' + estimatedTotalPrice + '</td><td>' + self.quoteAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('price') + ': </b></td><td style="text-align:right">' + self.sellPrice() + '</td><td>' + self.quoteAsset() + '/' + self.baseAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('amount') + ': </b></td><td style="text-align:right">' + self.sellAmount() + '</td><td>' + self.baseAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('total') + ': </b></td><td style="text-align:right">' + self.sellTotal() + '</td><td>' + self.quoteAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('real_estimated_total') + ': </b></td><td style="text-align:right">' + estimatedTotalPrice + '</td><td>' + self.quoteAsset() + '</td></tr>';
     message += '</table>';
 
     bootbox.dialog({
-      title: "Confirm your order",
+      title: i18n.t("confirm_your_order"),
       message: message,
       buttons: {
         "cancel": {
-          label: "Close",
+          label: i18n.t("close"),
           className: "btn-danger",
           callback: function() {
             bootbox.hideAll();
@@ -356,7 +409,7 @@ function ExchangeViewModel() {
           }
         },
         "confirm": {
-          label: "Confirm Order",
+          label: i18n.t("confirm_order"),
           className: "btn-primary",
           callback: function() {
             bootbox.hideAll();
@@ -384,9 +437,14 @@ function ExchangeViewModel() {
   });
   self.buyAmount = ko.observable(0).extend({
     required: true,
-    isValidPositiveQuantity: self
+    isValidPositiveQuantity: self,
+    baseDivisibilityIsOk: self
   });
-  self.buyTotal = ko.observable(0);
+  self.buyTotal = ko.observable(0).extend({
+    required: true,
+    isValidPositiveQuantity: self,
+    quoteDivisibilityIsOk: self
+  });
   self.buyPriceHasFocus = ko.observable();
   self.buyAmountHasFocus = ko.observable();
   self.buyTotalHasFocus = ko.observable();
@@ -466,7 +524,7 @@ function ExchangeViewModel() {
       validator: function (val, self) {
         return parseFloat(val) <= self.availableBalanceForBuy();
       },
-      message: 'Amount entered exceeds the address balance.',
+      message: i18n.t('quantity_exceeds_balance'),
       params: self
     }    
   });
@@ -489,13 +547,24 @@ function ExchangeViewModel() {
     return normalizeQuantity(fee_provided);
   });
 
+  self.buyRedeemableFee = ko.observable(normalizeQuantity(2 * MULTISIG_DUST_SIZE));
+
   self.selectSellOrder = function(order, notFromClick) {
-    var price = new Decimal(order.price);
+    var price = new Decimal(cleanHtmlPrice(order.price));
     var amount = new Decimal(order.base_depth);
     var total1 = price.mul(amount);
     var total2 = new Decimal(self.availableBalanceForBuy());
     var total = total1.compare(total2) > 0 ? total2 : total1;
-    amount = total.div(price);
+
+    if (self.quoteAssetIsDivisible() == self.baseAssetIsDivisible()) {
+      amount = total.div(price);
+    } else if (self.quoteAssetIsDivisible() && !self.baseAssetIsDivisible()) {
+      amount = Math.floor(total.div(price));
+      total = mulFloat(amount, price);
+    } else if (!self.quoteAssetIsDivisible() && self.baseAssetIsDivisible()) {
+      total = Math.floor(total);
+      amount = total.div(price);
+    }
 
     self.buyPrice(roundAmount(price));
     self.buyTotal(roundAmount(total));
@@ -508,15 +577,20 @@ function ExchangeViewModel() {
 
   self.setMaxBuyAmount = function() {
     var total = self.availableBalanceForBuy();
-    self.buyTotal(total);
     if (self.buyPrice()) {
       if (total==0) {
         self.buyAmount(0);
       } else {
-        self.buyAmount(divFloat(total, self.buyPrice()));
+        if (self.baseAssetIsDivisible()) {
+          self.buyAmount(divFloat(total, self.buyPrice()));
+        } else {
+          var amount = Math.floor(divFloat(total, self.buyPrice()));
+          self.buyAmount(amount);
+          total = mulFloat(amount, self.buyPrice());
+        }
       }
-      
     } 
+    self.buyTotal(total);
   }
 
   self.doBuy = function() {
@@ -553,11 +627,16 @@ function ExchangeViewModel() {
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       trackEvent('Exchange', 'Buy', self.dispAssetPair());
       
-      var message = "Your order to buy <b class='notoQuantityColor'>" + self.buyAmount() + "</b>"
-       + " <b class='notoAssetColor'>" + self.baseAsset() + "</b> " + (armoryUTx ? "will be placed" : "has been placed") + ". "; 
-      WALLET.showTransactionCompleteDialog(message + ACTION_PENDING_NOTICE, message, armoryUTx);
+      var message = "";
+      if (armoryUTx) {
+        message = i18n.t("you_buy_order_will_be_placed", self.buyAmount(), self.baseAsset()); 
+      } else {
+        message = i18n.t("you_buy_order_has_been_placed", self.buyAmount(), self.baseAsset());
+      }
+
+      WALLET.showTransactionCompleteDialog(message + " " + i18n.t(ACTION_PENDING_NOTICE), message, armoryUTx);
       
-      //if the order involes selling BTC, then we want to notify the servers of our wallet_id so folks can see if our
+      //if the order involes selling SFR, then we want to notify the servers of our wallet_id so folks can see if our
       // wallet is "online", in order to determine if we'd be able to best make the necessary BTCpay
       if(self.quoteAsset() == 'SFR' && addressType !== 'armory') {
         multiAPI("record_btc_open_order", {'wallet_id': WALLET.identifier(), 'order_tx_hash': txHash});
@@ -590,22 +669,22 @@ function ExchangeViewModel() {
     estimatedTotalPrice = smartFormat(estimatedTotalPrice);
 
     message  = '<table class="confirmOrderBox">';
-    message += '<tr><td><b>Price: </b></td><td style="text-align:right">' + self.buyPrice() + '</td><td>' + self.quoteAsset() + '/' + self.baseAsset() + '</td></tr>';
-    message += '<tr><td><b>Amount: </b></td><td style="text-align:right">' + self.buyAmount() + '</td><td>' + self.baseAsset() + '</td></tr>';
-    message += '<tr><td><b>Total: </b></td><td style="text-align:right">' + self.buyTotal() + '</td><td>' + self.quoteAsset() + '</td></tr>';
-    message += '<tr><td><b>Real estimated total: </b></td><td style="text-align:right">' + estimatedTotalPrice + '</td><td>' + self.quoteAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('price') + ': </b></td><td style="text-align:right">' + self.buyPrice() + '</td><td>' + self.quoteAsset() + '/' + self.baseAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('amount') + ': </b></td><td style="text-align:right">' + self.buyAmount() + '</td><td>' + self.baseAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('total') + ': </b></td><td style="text-align:right">' + self.buyTotal() + '</td><td>' + self.quoteAsset() + '</td></tr>';
+    message += '<tr><td><b>' + i18n.t('real_estimated_total') + ': </b></td><td style="text-align:right">' + estimatedTotalPrice + '</td><td>' + self.quoteAsset() + '</td></tr>';
     if (self.quoteAsset() == 'SFR') {
-      message += '<tr><td><b>Provided fee: </b></td><td style="text-align:right">' + self.buyFee() + '</td><td>' + self.quoteAsset() + '</td></tr>';
-      message += '<tr><td colspan="3"><i>These fees are optional, go directly miners (not to us) and are non-refundable.</i></td></tr>';
+      message += '<tr><td><b>' + i18n.t('provided_fee') + ': </b></td><td style="text-align:right">' + self.buyFee() + '</td><td>' + self.quoteAsset() + '</td></tr>';
+      message += '<tr><td colspan="3"><i>' + i18n.t('these_fees_are_optional') + '</i></td></tr>';
     }
     message += '</table>';
 
     bootbox.dialog({
-      title: "Confirm your order",
+      title: i18n.t("confirm_your_order"),
       message: message,
       buttons: {
         "cancel": {
-          label: "Close",
+          label: i18n.t("close"),
           className: "btn-danger",
           callback: function() {
             bootbox.hideAll();
@@ -613,7 +692,7 @@ function ExchangeViewModel() {
           }
         },
         "confirm": {
-          label: "Confirm Order",
+          label: i18n.t("confirm_order"),
           className: "btn-primary",
           callback: function() {
             bootbox.hideAll();
@@ -658,9 +737,11 @@ function ExchangeViewModel() {
 
   self.displayOpenUserOrders = function(data) {
     for (var i in data) {
-      data[i].amount = smartFormat(normalizeQuantity(data[i].amount, self.baseAssetIsDivisible()));
-      data[i].total = smartFormat(normalizeQuantity(data[i].total, self.quoteAssetIsDivisible()));
-      data[i].price = smartFormat(parseFloat(data[i].price));
+      
+      data[i].amount = formatHtmlPrice(normalizeQuantity(data[i].amount, self.baseAssetIsDivisible()));
+      data[i].total = formatHtmlPrice(normalizeQuantity(data[i].total, self.quoteAssetIsDivisible()));
+      data[i].price = formatHtmlPrice(parseFloat(data[i].price));
+      data[i].cancelled = WALLET.cancelOrders.indexOf(data[i].tx_hash) != -1;
     }
     self.userOpenOrders(data);
   }
@@ -682,10 +763,10 @@ function ExchangeViewModel() {
 
   self.displayUserLastTrades = function(data) {
     for (var i in data) {
-      data[i].amount = smartFormat(normalizeQuantity(data[i].amount, self.baseAssetIsDivisible()));
-      data[i].total = smartFormat(normalizeQuantity(data[i].total, self.quoteAssetIsDivisible()));
+      data[i].amount = formatHtmlPrice(normalizeQuantity(data[i].amount, self.baseAssetIsDivisible()));
+      data[i].total = formatHtmlPrice(normalizeQuantity(data[i].total, self.quoteAssetIsDivisible()));
       data[i].block_time = moment(data[i].block_time * 1000).format('YYYY/MM/DD hh:mm:ss A Z');
-      data[i].price = smartFormat(parseFloat(data[i].price));
+      data[i].price = formatHtmlPrice(parseFloat(data[i].price));
     }
     self.userLastTrades(data);
   }
@@ -779,18 +860,20 @@ function ExchangeViewModel() {
           self.sellPrice(data['buy_orders'][i]['price']);
           var a = new Decimal(self.availableBalanceForSell());
           var h = new Decimal(self.highestBidPrice());
-          var o = roundAmount(a.mul(a));
+          var o = roundAmount(a.mul(h));
           self.obtainableForSell(o);
         }
         var amount = normalizeQuantity(data['buy_orders'][i]['amount'], data['base_asset_divisible']);
+        var noHtmlAmount = roundAmount(amount);
+        var noHtmlTotal = roundAmount(normalizeQuantity(data['buy_orders'][i]['total'], data['quote_asset_divisible']));
         data['buy_orders'][i]['exclude'] = false;
         
-        data['buy_orders'][i]['amount'] = roundAmount(amount);
-        data['buy_orders'][i]['total'] = roundAmount(normalizeQuantity(data['buy_orders'][i]['total'], data['quote_asset_divisible']));
-        var a = new Decimal(data['buy_orders'][i]['amount']);
-        var t = new Decimal(data['buy_orders'][i]['total']);
+        data['buy_orders'][i]['amount'] = formatHtmlPrice(noHtmlAmount);
+        data['buy_orders'][i]['total'] = formatHtmlPrice(noHtmlTotal);
+        var a = new Decimal(noHtmlAmount);
+        var t = new Decimal(noHtmlTotal);
         var p = roundAmount(t.div(a));
-        data['buy_orders'][i]['price'] = p;
+        data['buy_orders'][i]['price'] = formatHtmlPrice(p);
         data['buy_orders'][i]['base_depth'] = amount + base_depth;
         base_depth = data['buy_orders'][i]['base_depth'];
       }
@@ -810,13 +893,15 @@ function ExchangeViewModel() {
           self.obtainableForBuy(o);
         }
         var amount = normalizeQuantity(data['sell_orders'][i]['amount'], data['base_asset_divisible']);
+        var noHtmlAmount = roundAmount(amount);
+        var noHtmlTotal = roundAmount(normalizeQuantity(data['sell_orders'][i]['total'], data['quote_asset_divisible']));
         data['sell_orders'][i]['exclude'] = false;
-        data['sell_orders'][i]['amount'] = roundAmount(amount);
-        data['sell_orders'][i]['total'] = roundAmount(normalizeQuantity(data['sell_orders'][i]['total'], data['quote_asset_divisible']));
-        var a = new Decimal(data['sell_orders'][i]['amount']);
-        var t = new Decimal(data['sell_orders'][i]['total']);
+        data['sell_orders'][i]['amount'] = formatHtmlPrice(noHtmlAmount);
+        data['sell_orders'][i]['total'] = formatHtmlPrice(noHtmlTotal);
+        var a = new Decimal(noHtmlAmount);
+        var t = new Decimal(noHtmlTotal);
         var p = roundAmount(t.div(a));
-        data['sell_orders'][i]['price'] = p;
+        data['sell_orders'][i]['price'] = formatHtmlPrice(p);
         data['sell_orders'][i]['base_depth'] = amount + base_depth;
         base_depth = data['sell_orders'][i]['base_depth'];
       }
@@ -829,9 +914,9 @@ function ExchangeViewModel() {
     try { $('#tradeHistory').dataTable().fnClearTable(); } catch(err) { }
 
     for (var i in data['last_trades']) {
-      data['last_trades'][i]['price'] = roundAmount(data['last_trades'][i]['price']);
-      data['last_trades'][i].amount = roundAmount(normalizeQuantity(data['last_trades'][i].amount, self.baseAssetIsDivisible()));
-      data['last_trades'][i].total = roundAmount(normalizeQuantity(data['last_trades'][i].total, self.quoteAssetIsDivisible()));
+      data['last_trades'][i]['price'] = formatHtmlPrice(roundAmount(data['last_trades'][i]['price']));
+      data['last_trades'][i].amount = formatHtmlPrice(roundAmount(normalizeQuantity(data['last_trades'][i].amount, self.baseAssetIsDivisible())));
+      data['last_trades'][i].total = formatHtmlPrice(roundAmount(normalizeQuantity(data['last_trades'][i].total, self.quoteAssetIsDivisible())));
       data['last_trades'][i].block_time = moment(data['last_trades'][i].block_time * 1000).format('YYYY/MM/DD hh:mm:ss A Z');
     }
     self.tradeHistory(data['last_trades']);
@@ -891,7 +976,6 @@ function ExchangeViewModel() {
       $('#asset1, #asset2').typeahead(null, {
         source: assets.ttAdapter(),
         displayKey: function(obj) { 
-          $.jqlog.debug(obj);
           return obj; 
         }
       }).on('typeahead:selected', function($e, datum) {
@@ -927,37 +1011,44 @@ function ExchangeViewModel() {
   }
   
   self.cancelOrder = function(order) {
-    $.jqlog.debug(order);
 
-    var message = 'Requests to cancel an order will still consume SFR (necessary to pay the Saffroncoin miner fee). To avoid this, let your order expire naturally.';
-    if (self.quoteAsset() == 'SFR' && order.type == 'BUY') {
-      message += '<br />We recommend to use cSFR for your next trades! It\'s faster, cheaper, and you don\'t have to stay logged in.';
-    }
+    if (WALLET.cancelOrders.indexOf(order.tx_hash) != -1) {
 
-    bootbox.dialog({
-      title: "Confirm cancellation order",
-      message: message,
-      buttons: {
-        "cancel": {
-          label: "Close",
-          className: "btn-danger",
-          callback: function() {
-            bootbox.hideAll();
-            return false;
-          }
-        },
-        "confirm": {
-          label: "Confirm Cancellation",
-          className: "btn-primary",
-          callback: function() {
-            bootbox.hideAll();
-            self.cancelOpenOrder(order);
-            return true;
-          }
-        }
+      bootbox.alert(i18n.t('order_already_cancelled'));
 
+    } else {
+
+      var message = i18n.t('cancel_consume_btc');
+      if (self.quoteAsset() == 'SFR' && order.type == 'BUY') {
+        message += '<br />' + i18n.t('we_recommend_to_use_xcp');
       }
-    });
+
+      bootbox.dialog({
+        title: i18n.t("confirm_cancellation_order"),
+        message: message,
+        buttons: {
+          "cancel": {
+            label: i18n.t("close"),
+            className: "btn-danger",
+            callback: function() {
+              bootbox.hideAll();
+              return false;
+            }
+          },
+          "confirm": {
+            label: i18n.t("confirm_cancellation"),
+            className: "btn-primary",
+            callback: function() {
+              bootbox.hideAll();
+              self.cancelOpenOrder(order);
+              return true;
+            }
+          }
+
+        }
+      }); 
+
+    }
 
   }
 
@@ -971,8 +1062,8 @@ function ExchangeViewModel() {
 
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       trackEvent('Exchange', 'OrderCanceled');
-      WALLET.showTransactionCompleteDialog("<b>Your order was canceled successfully.</b> " + ACTION_PENDING_NOTICE,
-        "<b>Your order will be cancelled.</b>", armoryUTx);
+      WALLET.showTransactionCompleteDialog("<b>" + i18n.t("order_was_cancelled") + "</b> " + i18n.t(ACTION_PENDING_NOTICE),
+        "<b>" + i18n.t("order_will_be_cancelled") + "</b>", armoryUTx);
     }
     
     WALLET.doTransaction(order.source, "create_cancel", params, onSuccess);
@@ -1143,7 +1234,6 @@ function OpenOrdersViewModel() {
   }
 
   self.displayOpenOrders = function(data) {
-    $.jqlog.debug(data);
     self.openOrders([]);
     var assets = {};
     var orders = [];
@@ -1157,13 +1247,14 @@ function OpenOrdersViewModel() {
       order.get_asset = data[i].get_asset;
       order.give_quantity = data[i].give_quantity;
       order.get_quantity = data[i].get_quantity;
-      order.give_remaining = data[i].give_remaining;
-      order.get_remaining = data[i].get_remaining;
+      order.give_remaining = Math.max(data[i].give_remaining, 0);
+      order.get_remaining = Math.max(data[i].get_remaining, 0);
       order.expire_index = data[i].expire_index;
       order.expire_date = expireDate(data[i].expire_index);
+      order.cancelled = WALLET.cancelOrders.indexOf(order.tx_hash) != -1;
       orders.push(order);
       assets[data[i].give_asset] = true;
-      assets[data[i].give_asset] = true;
+      assets[data[i].get_asset] = true;
     }
     assets = _.keys(assets);
 
@@ -1180,37 +1271,43 @@ function OpenOrdersViewModel() {
   }
 
   self.cancelOpenOrder = function(order) {
-    $.jqlog.debug(order);
 
-    var message = 'Requests to cancel an order will still consume SFR (necessary to pay the Saffroncoin miner fee). To avoid this, let your order expire naturally.';
-    if (order.give_quantity_str.indexOf('SFR') != -1) {
-      message += '<br />We recommend to use cSFR for your next trades! It\'s faster, cheaper, and you don\'t have to stay logged in.';
-    }
+    if (WALLET.cancelOrders.indexOf(order.tx_hash) != -1) {
 
-    bootbox.dialog({
-      title: "Confirm cancellation order",
-      message: message,
-      buttons: {
-        "cancel": {
-          label: "Close",
-          className: "btn-danger",
-          callback: function() {
-            bootbox.hideAll();
-            return false;
-          }
-        },
-        "confirm": {
-          label: "Confirm Cancellation",
-          className: "btn-primary",
-          callback: function() {
-            bootbox.hideAll();
-            self.cancelOrder(order);
-            return true;
+      bootbox.alert(i18n.t('order_already_cancelled'));
+
+    } else {
+
+      var message = i18n.t('cancel_consume_btc');
+      if (order.give_quantity_str.indexOf('SFR') != -1) {
+        message += '<br />' + i18n.t('we_recommend_to_use_xcp');
+      }
+
+      bootbox.dialog({
+        title: i18n.t("confirm_cancellation_order"),
+        message: message,
+        buttons: {
+          "cancel": {
+            label: i18n.t("close"),
+            className: "btn-danger",
+            callback: function() {
+              bootbox.hideAll();
+              return false;
+            }
+          },
+          "confirm": {
+            label: i18n.t("confirm_cancellation"),
+            className: "btn-primary",
+            callback: function() {
+              bootbox.hideAll();
+              self.cancelOrder(order);
+              return true;
+            }
           }
         }
-      }
-    });
+      });
 
+    }
   }
 
   self.cancelOrder = function(order) {
@@ -1223,8 +1320,8 @@ function OpenOrdersViewModel() {
 
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       trackEvent('OpenOrders', 'OrderCancelled');
-      WALLET.showTransactionCompleteDialog("<b>Your order was canceled successfully.</b> " + ACTION_PENDING_NOTICE,
-        "<b>Your order will be cancelled.</b>", armoryUTx);
+      WALLET.showTransactionCompleteDialog("<b>" + i18n.t("order_was_cancelled") + "</b> " + i18n.t(ACTION_PENDING_NOTICE),
+        "<b>" + i18n.t("order_will_be_cancelled") + "</b>", armoryUTx);
     }
 
     WALLET.doTransaction(order.source, "create_cancel", params, onSuccess);
@@ -1291,7 +1388,12 @@ function OrderMatchesViewModel() {
         'pending': 'primary',
         'expired': 'danger'
       };
-      order_match.status_html = '<span class="label label-'+classes[order_match.status]+'">'+order_match.status+'</span>';
+      var label_for_status = {
+        'completed': i18n.t('completed'),
+        'pending': i18n.t('pending'),
+        'expired': i18n.t('expired')
+      };
+      order_match.status_html = '<span class="label label-'+classes[order_match.status]+'">'+label_for_status[order_match.status]+'</span>';
 
       order_matches.push(order_match);
     }

@@ -14,6 +14,12 @@ function WalletViewModel() {
   self.isSellingBTC = ko.observable(false); //updated by the btcpay feed
   self.isOldWallet = ko.observable(false);
 
+  self.cancelOrders = [];
+  var storedCancelOrders = localStorage.getObject("cancelOrders")
+  if (storedCancelOrders) {
+    self.cancelOrders = storedCancelOrders;
+  }
+
   self.networkBlockHeight.subscribe(function(newBlockIndex) {
     try {
       if (CURRENT_PAGE_URL == 'pages/exchange.html') {
@@ -44,7 +50,7 @@ function WalletViewModel() {
       //see if there's a label already for this address that's stored in PREFERENCES, and use that if so
       var addressHash = hashToB64(address);
       //^ we store in prefs by a hash of the address so that the server data (if compromised) cannot reveal address associations
-      var label = PREFERENCES.address_aliases[addressHash] || "My Address #" + (i + 1);
+      var label = PREFERENCES.address_aliases[addressHash] || i18n.t("default_address_label", (i + 1));
       //^ an alias is made when a watch address is made, so this should always be found
   
       self.addresses.push(new AddressViewModel(type, key, address, label)); //add new
@@ -55,7 +61,7 @@ function WalletViewModel() {
       //a label should already exist for the address in PREFERENCES.address_aliases by the time this is called
       assert(!self.getAddressObj(address), "Cannot addAddress: watch/armory address already exists in wallet!");
       var addressHash = hashToB64(address);
-      var label = PREFERENCES.address_aliases[addressHash] || "UNKNOWN LABEL";
+      var label = PREFERENCES.address_aliases[addressHash] || i18n.t("unknown_label");
   
       self.addresses.push(new AddressViewModel(type, null, address, label, armoryPubKey)); //add new
       $.jqlog.debug("Watch-only or armory wallet address added: " + address + " -- hash: "
@@ -141,10 +147,13 @@ function WalletViewModel() {
       if (asset == 'SFR' && unconfirmedRawBal) {
         assetObj.unconfirmedBalance(normalizeQuantity(unconfirmedRawBal));
         assetObj.balanceChangePending(true);
+        addressObj.addOrUpdateAsset(asset, {}, rawBalance);
       } else if (asset == 'SFR') {
         assetObj.unconfirmedBalance(0);
         assetObj.balanceChangePending(false);
+        addressObj.addOrUpdateAsset(asset, {}, rawBalance);
       }
+
     }
     return true;
   }
@@ -231,7 +240,7 @@ function WalletViewModel() {
     // check if the wallet have the information
     for (var a in assets) {
       var asset = assets[a];
-      if (asset == 'XCP' || asset == 'BTC') {
+      if (asset == 'cSFR' || asset == 'SFR') {
         assetsDivisibility[asset] = true;
       } else {
         var divisible = self.isAssetDivisibilityAvailable(asset);
@@ -246,7 +255,7 @@ function WalletViewModel() {
     }
 
     if (notAvailable.length > 0) {
-      // else make a query to csfrd
+      // else make a query to counterpartyd
       failoverAPI("get_asset_info", {'assets': notAvailable}, function(assetsInfo, endpoint) {
         for (var a in assetsInfo) {
           assetsDivisibility[assetsInfo[a]['asset']] = assetsInfo[a]['divisible'];
@@ -273,17 +282,22 @@ function WalletViewModel() {
     return _.uniq(assets);
   }
   
-  self.refreshcSFRBalances = function(addresses, onSuccess) {
-    //update all csfr asset balances for the specified address (including XCP)
+  self.refreshCounterpartyBalances = function(addresses, onSuccess) {
+    //update all counterparty asset balances for the specified address (including cSFR)
     //Note: after login, this normally never needs to be called (except when adding a watch address),
-    // as csfr asset balances are updated automatically via the messages feed
+    // as counterparty asset balances are updated automatically via the messages feed
     failoverAPI("get_normalized_balances", {'addresses': addresses},
       function(balancesData, endpoint) {
         $.jqlog.debug("Got initial balances: " + JSON.stringify(balancesData));
         
-        if(!balancesData.length)
+        if(!balancesData.length) {
+          for (var i in addresses) {
+            WALLET.getAddressObj(addresses[i]).addOrUpdateAsset('cSFR', {}, 0, 0);
+          }
           if (onSuccess) return onSuccess(); //user has no balance (i.e. first time logging in)
           else return;
+        }
+          
         
         var i = null, j = null;
         var numBalProcessed = 0;
@@ -293,7 +307,7 @@ function WalletViewModel() {
           if(assets.indexOf(balancesData[i]['asset'])==-1)
           assets.push(balancesData[i]['asset']);
         }
-        // TODO: optimize: assets infos already fetched in get_normalized_balances() in csfrblockd
+        // TODO: optimize: assets infos already fetched in get_normalized_balances() in counterblockd
         failoverAPI("get_asset_info", {'assets': assets}, function(assetsInfo, endpoint) {
 
           failoverAPI("get_escrowed_balances", {'addresses': addresses}, function(escrowedBalances) {
@@ -375,7 +389,7 @@ function WalletViewModel() {
             
           if(pendingActionsHasBTCSend) {
             //see if data[i]['lastTxns'] includes any hashes that exist in the Pending Actions, which
-            // means we MAY be able to remove them from that listing (i.e. they COULD be non-BTC send (i.e. csfr transactions) though
+            // means we MAY be able to remove them from that listing (i.e. they COULD be non-BTC send (i.e. counterparty transactions) though
             //TODO: This is not very efficient when a BTC send is pending... O(n^3)! Although the sample sets are relatively small...
             for(var j=0; j < data[i]['lastTxns'].length; j++) {
               PENDING_ACTION_FEED.remove(data[i]['lastTxns'][j], "sends", true);
@@ -391,7 +405,7 @@ function WalletViewModel() {
       if(isRecurring && self.autoRefreshBTCBalances) {
         setTimeout(function() {
           if(self.autoRefreshBTCBalances) { self.refreshBTCBalances(true); }
-        }, 1000 * 24);
+        }, 60000 * 5);
       }
 
       if (onSuccess) onSuccess();
@@ -405,12 +419,12 @@ function WalletViewModel() {
         addressObj.numPrimedTxouts(null); //null = UNKNOWN
         addressObj.numPrimedTxoutsIncl0Confirms(null); //null = UNKNOWN
       }
-      bootbox.alert("Got an error when trying to sync SFR balances: " + textStatus);
+      bootbox.alert(i18n.t("btc_sync_error", textStatus));
       
       if(isRecurring && self.autoRefreshBTCBalances) {
         setTimeout(function() {
           if(self.autoRefreshBTCBalances) { self.refreshBTCBalances(true); }
-        }, 1000 * 24);
+        }, 60000 * 5);
       }
     });
   }
@@ -429,8 +443,7 @@ function WalletViewModel() {
   //BTC-related
   self.broadcastSignedTx = function(signedTxHex, onSuccess, onError) {
     if (signedTxHex==false) {
-      bootbox.alert("Client-side transaction validation FAILED. Transaction will be aborted and NOT broadcast."
-                    + " Please contact the SFRDirect development team");
+      bootbox.alert(i18n.t("tx_validation_failed"));
       return false;
     }
     $.jqlog.debug("RAW SIGNED HEX: " + signedTxHex);
@@ -447,7 +460,7 @@ function WalletViewModel() {
   self.signAndBroadcastTxRaw = function(key, unsignedTxHex, onSuccess, onError, verifySourceAddr, verifyDestAddr) {
     assert(verifySourceAddr, "Source address must be specified");
     assert(verifyDestAddr, "Destination address must be specified");
-    //Sign and broadcast a multisig transaction that we got back from csfrd (as a raw unsigned tx in hex)
+    //Sign and broadcast a multisig transaction that we got back from counterpartyd (as a raw unsigned tx in hex)
     //* verifySourceAddr and verifyDestAddr MUST be specified to verify that the txn hash we get back from the server is what we expected. 
     
     $.jqlog.debug("RAW UNSIGNED HEX: " + unsignedTxHex);
@@ -522,17 +535,14 @@ function WalletViewModel() {
   }
   
   /////////////////////////
-  //cSFR transaction-related
+  //Counterparty transaction-related
   self.canDoTransaction = function(address) {
-    /* ensures that the specified address can perform a csfr transaction */
+    /* ensures that the specified address can perform a counterparty transaction */
     var addressObj = self.getAddressObj(address);
     assert(!addressObj.IS_WATCH_ONLY, "Cannot perform this action on a watch only address!");
     
     if(self.getBalance(address, "SFR", false) < MIN_PRIME_BALANCE) {
-      bootbox.alert("Cannot do this action as you have insufficient <b class='notoAssetColor'>SFR</b> at this address."
-        + "Due to Saffroncoin fees, each SFRDirect action requires"
-        + " approximately <b class='notoQuantityColor'>" + normalizeQuantity(MIN_PRIME_BALANCE) + "</b> <b class='notoAssetColor'>SFR</b> to perform.<br/><br/>"
-        + "Please deposit the necessary <b class='notoAssetColor'>SFR</b> into <b class='notoAddrColor'>" + getAddressLabel(address) + "</b> and try again.");
+      bootbox.alert(i18n.t("insufficient_btc", normalizeQuantity(MIN_PRIME_BALANCE), getAddressLabel(address)));
       return false;
     }
 
@@ -542,6 +552,17 @@ function WalletViewModel() {
   self.doTransaction = function(address, action, data, onSuccess, onError) {
     assert(['sign_tx', 'broadcast_tx', 'convert_armory_signedtx_to_raw_hex'].indexOf(action) === -1,
       'Specified action not supported through this function. please use appropriate primatives');
+
+    if(action == 'create_cancel') {
+      if (self.cancelOrders.indexOf(data['offer_hash']) != -1) {
+        $.jqlog.debug(data['offer_hash'] + ' already cancelled.')
+        return;
+      } else {
+        $('#btcancel_' + data['offer_hash']).addClass('disabled');
+        self.cancelOrders.push(data['offer_hash']);
+        localStorage.setObject("cancelOrders", self.cancelOrders);
+      }
+    }
     
     var addressObj = WALLET.getAddressObj(address);
     
@@ -551,7 +572,7 @@ function WalletViewModel() {
     //specify the pubkey for a multisig tx
     assert(data['encoding'] === undefined);
     assert(data['pubkey'] === undefined);
-    data['encoding'] = 'auto';
+    data['encoding'] = 'multisig';
     data['pubkey'] = addressObj.PUBKEY;
     //find and specify the verifyDestAddr
 
@@ -580,7 +601,7 @@ function WalletViewModel() {
     var verifyDestAddr = data['destination'] || data['transfer_destination'] || data['feed_address'] || data['destBtcPay'] || data['source'];
     delete data['destBtcPay'];
     if (action == "create_burn") {
-      verifyDestAddr = USE_TESTNET ? TESTNET_UNSPENDABLE : MAINNET_UNSPENDABLE;
+      verifyDestAddr = TESTNET_UNSPENDABLE;
     } else if (action == "create_dividend" && data['dividend_asset'] == 'SFR') {
       verifyDestAddr = data['_btc_dividend_dests'];
       delete data['_btc_dividend_dests'];
@@ -631,9 +652,8 @@ function WalletViewModel() {
   
   self.showTransactionCompleteDialog = function(text, armoryText, armoryUTx) {
     if(armoryUTx) {
-      bootbox.alert((armoryText || text) + "<br/><br/>To complete the transaction, please copy over and sign the text below on your"
-        + " offline Armory system, then bring back to cSFRwallet to broadcast:</br>"
-        + "<textarea class=\"form-control armoryUTxTextarea\" rows=\"20\">" + armoryUTx + "</textarea>");
+      bootbox.alert((armoryText || text) + "<br/><br/>" + i18n.t("to_complete_armory_tx")
+        + "</br><textarea class=\"form-control armoryUTxTextarea\" rows=\"20\">" + armoryUTx + "</textarea>");
     } else {
       bootbox.alert(text);
     }
@@ -653,6 +673,7 @@ function WalletViewModel() {
     var now = Math.round((new Date()).getTime() / 1000);
     localStorage.setObject(WALLET.identifier() + '_preferences', {'last_updated': now, 'preferences':PREFERENCES});
   }
+
 }
 
 /*NOTE: Any code here is only triggered the first time the page is visited. Put JS that needs to run on the

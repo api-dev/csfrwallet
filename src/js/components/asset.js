@@ -1,6 +1,6 @@
 
 function AssetViewModel(props) {
-  //An address has 2 or more assets (BTC, XCP, and any others)
+  //An address has 2 or more assets (SFR, cSFR, and any others)
   var self = this;
   self.ADDRESS = props['address']; //will not change
   self.ASSET = props['asset']; //assetID, will not change
@@ -8,7 +8,7 @@ function AssetViewModel(props) {
   self.owner = ko.observable(props['owner']);
   self.locked = ko.observable(props['locked'] !== undefined ? props['locked'] : false);
   self.rawBalance = ko.observable(props['rawBalance'] || (self.ASSET == 'SFR' ? null : 0));
-  //^ raw (not normalized) (for BTC/XCP, default to null to show '??' instead of 0, until the balance is populated)
+  //^ raw (not normalized) (for SFR/cSFR, default to null to show '??' instead of 0, until the balance is populated)
   self.rawSupply = ko.observable(props['rawSupply'] || 0); //raw
   self.SUPPLY = normalizeQuantity(self.rawSupply(), self.DIVISIBLE);
   self.holdersSupply = self.rawSupply() - self.rawBalance();
@@ -35,7 +35,7 @@ function AssetViewModel(props) {
   }
 
   self.isMine = ko.computed(function() {
-    if(self.ASSET == 'SFR' || self.ASSET == 'cSFR') return null; //special value for BTC and XCP
+    if(self.ASSET == 'SFR' || self.ASSET == 'cSFR') return null; //special value for SFR and cSFR
     return self.owner() == self.ADDRESS;
   }, self);
   
@@ -84,8 +84,7 @@ function AssetViewModel(props) {
 
   self.send = function () {
     if(self.availableBalance()<=0) { 
-      bootbox.alert("You have no available <b class='notoAssetColor'>" + self.ASSET + "</b>" + 
-                    " at address <b class='notoAddrColor'>" + getAddressLabel(self.ADDRESS) + "</b> to send."); 
+      bootbox.alert(i18n.t("not_available_asset_to_send", self.ASSET, getAddressLabel(self.ADDRESS))); 
       return; 
     }
     if(!WALLET.canDoTransaction(self.ADDRESS)) return false;
@@ -98,8 +97,7 @@ function AssetViewModel(props) {
   
   self.testnetBurn = function () {
     if(!self.availableBalance()) { 
-      bootbox.alert("You have no available <b class='notoAssetColor'>" + self.ASSET + "</b>" + 
-                    " at address <b class='notoAddrColor'>" + getAddressLabel(self.ADDRESS) + "</b> to burn."); 
+      bootbox.alert(i18n.t("not_available_asset_to_burn", self.ASSET, getAddressLabel(self.ADDRESS))); 
       return; 
     }
     if(!WALLET.canDoTransaction(self.ADDRESS)) return false;
@@ -123,19 +121,18 @@ function AssetViewModel(props) {
     if(!WALLET.canDoTransaction(self.ADDRESS)) return false;
     
     bootbox.dialog({
-      message: "By locking your token, you will not be able to issue more units of it in the future.<br/><br/> \
-        <b class='errorRed'>Please NOTE that this action is irreversable!</b>",
-      title: "Are you sure?",
+      message: i18n.t("lock_asset_warning"),
+      title: i18n.t("are_you_sure"),
       buttons: {
         success: {
-          label: "Cancel",
+          label: i18n.t("cancel"),
           className: "btn-default",
           callback: function() {
             //modal will disappear
           }
         },
         danger: {
-          label: "Lock Token",
+          label: i18n.t("lock_token"),
           className: "btn-danger",
           callback: function() {
             //to lock, issue with quantity == 0 and "LOCK" in the description field
@@ -151,8 +148,13 @@ function AssetViewModel(props) {
                 transfer_destination: null
               },
               function(txHash, data, endpoint, addressType, armoryUTx) {
-                var message = "Your token " + (armoryUTx ? "will be" : "has been") + " locked. No more units of the token may be issued.";
-                WALLET.showTransactionCompleteDialog(message + ACTION_PENDING_NOTICE, message, armoryUTx);
+                var message = i18n.t("no_more_token_may_issued");
+                if (armoryUTx) {
+                  message = i18n.t("token_will_be_locked") + " " + message;
+                } else {
+                  message = i18n.t("token_has_been_locked") + " " + message;
+                }
+                WALLET.showTransactionCompleteDialog(message + " " + i18n.t(ACTION_PENDING_NOTICE), message, armoryUTx);
               }
             );
           }
@@ -169,7 +171,7 @@ function AssetViewModel(props) {
   self.call = function() {
     ///////////////////
     //TEMP DISABLE
-    bootbox.alert("Token callbacks are temporarily disabled.");
+    bootbox.alert(i18n.t("callback_temporarily_disabled"));
     return false;
     ///////////////////
     

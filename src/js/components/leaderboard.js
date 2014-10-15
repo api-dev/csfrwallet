@@ -32,79 +32,79 @@ var AssetLeaderboardViewModel = CClass.create(function() {
     //Compose the table this has changed
     var i = null, j = null, marketInfo = null;
     
-    //label csfr marketcap positions
+    //label cSFR marketcap positions
     marketInfo = self.isLeaderboard ? self.marketInfo['csfr'] : self.marketInfo; 
     marketInfo.sort(
       function(l, r) {
-        return l['market_cap_in_csfr'] == r['market_cap_in_csfr'] ? 0 : (l['market_cap_in_csfr'] < r['market_cap_in_csfr'] ? 1 : -1)
+        return l['market_cap_in_xcp'] == r['market_cap_in_xcp'] ? 0 : (l['market_cap_in_xcp'] < r['market_cap_in_xcp'] ? 1 : -1)
       }
     );
     for(i=0; i < marketInfo.length; i++) {
-      marketInfo[i]['position_csfr'] = i + 1;
+      marketInfo[i]['position_xcp'] = i + 1;
     }
     assert(self.marketCapTables()[0]['base'] == 'cSFR');
     for(i=0; i < marketInfo.length; i++) {
-      if(!marketInfo[i]['price_in_csfr']) continue;
+      if(!marketInfo[i]['price_in_xcp']) continue;
       self.marketCapTables()[0]['data'].push({
-        position: marketInfo[i]['position_csfr'],
+        position: marketInfo[i]['position_xcp'],
         asset: marketInfo[i]['asset'],
         dispAsset: AssetLeaderboardViewModel.formulateExtendedAssetInfo(marketInfo[i]['asset'],
           marketInfo[i]['extended_image'], marketInfo[i]['extended_website']),
-        marketCap: marketInfo[i]['market_cap_in_csfr'] ? (smartFormat(marketInfo[i]['market_cap_in_csfr'], 100, 0) + ' cSFR') : '',
-        price: marketInfo[i]['aggregated_price_as_csfr'] ? (smartFormat(marketInfo[i]['aggregated_price_as_csfr'], 10, 4) + ' cSFR') : '',
+        marketCap: marketInfo[i]['market_cap_in_xcp'] ? (smartFormat(marketInfo[i]['market_cap_in_xcp'], 100, 0) + ' cSFR') : '',
+        price: marketInfo[i]['aggregated_price_as_xcp'] ? (smartFormat(marketInfo[i]['aggregated_price_as_xcp'], 10, 4) + ' cSFR') : '',
         supply: smartFormat(marketInfo[i]['total_supply'], 100, 4) + ' ' + marketInfo[i]['asset'],
         //volume: marketInfo[i]['24h_summary']['vol'] ? (smartFormat(marketInfo[i]['24h_summary']['vol'], 100, 4) + ' ' + marketInfo[i]['asset']) : '',
-        //volume: (marketInfo[i]['24h_ohlc_in_csfr']['vol'] && marketInfo[i]['aggregated_price_in_csfr']) 
-        //  ? (smartFormat(marketInfo[i]['24h_ohlc_in_csfr']['vol'] * marketInfo[i]['aggregated_price_in_csfr'], 0, 4) + ' cSFR') : '',
-        volume: (marketInfo[i]['24h_summary'] && marketInfo[i]['24h_summary']['vol'] && marketInfo[i]['aggregated_price_in_csfr']) 
-          ? (smartFormat(marketInfo[i]['24h_summary']['vol'] * marketInfo[i]['aggregated_price_in_csfr'], 10, 4) + ' cSFR') : '',
-        pctChange: marketInfo[i]['24h_vol_price_change_in_csfr'] ? (smartFormat(marketInfo[i]['24h_vol_price_change_in_csfr'], 0, 2) + ' %') : '',
-        pctChangeColorClass: marketInfo[i]['24h_vol_price_change_in_csfr'] > 0 ? 'txt-color-green' : (marketInfo[i]['24h_vol_price_change_in_csfr'] < 0 ? 'txt-color-red' : 'initial'),
-        history: marketInfo[i]['7d_history_in_csfr'],
+        //volume: (marketInfo[i]['24h_ohlc_in_xcp']['vol'] && marketInfo[i]['aggregated_price_in_xcp']) 
+        //  ? (smartFormat(marketInfo[i]['24h_ohlc_in_xcp']['vol'] * marketInfo[i]['aggregated_price_in_xcp'], 0, 4) + ' cSFR') : '',
+        volume: (marketInfo[i]['24h_summary'] && marketInfo[i]['24h_summary']['vol'] && marketInfo[i]['aggregated_price_in_xcp']) 
+          ? (smartFormat(marketInfo[i]['24h_summary']['vol'] * marketInfo[i]['aggregated_price_in_xcp'], 10, 4) + ' cSFR') : '',
+        pctChange: marketInfo[i]['24h_vol_price_change_in_xcp'] ? (smartFormat(marketInfo[i]['24h_vol_price_change_in_xcp'], 0, 2) + ' %') : '',
+        pctChangeColorClass: marketInfo[i]['24h_vol_price_change_in_xcp'] > 0 ? 'txt-color-green' : (marketInfo[i]['24h_vol_price_change_in_xcp'] < 0 ? 'txt-color-red' : 'initial'),
+        history: marketInfo[i]['7d_history_in_xcp'],
 
-        marketCapRaw: marketInfo[i]['market_cap_in_csfr'],
-        priceRaw: marketInfo[i]['aggregated_price_as_csfr'],
+        marketCapRaw: marketInfo[i]['market_cap_in_xcp'],
+        priceRaw: marketInfo[i]['aggregated_price_as_xcp'],
         supplyRaw: marketInfo[i]['total_supply'],
-        volumeRaw: marketInfo[i]['24h_ohlc_in_csfr'] ? marketInfo[i]['24h_ohlc_in_csfr']['vol'] : 0,
-        pctChangeRaw: marketInfo[i]['24h_vol_price_change_in_csfr']
+        volumeRaw: marketInfo[i]['24h_ohlc_in_xcp'] ? marketInfo[i]['24h_ohlc_in_xcp']['vol'] : 0,
+        pctChangeRaw: marketInfo[i]['24h_vol_price_change_in_xcp']
       });
     }
     
-    //label sfr marketcap positions
-    marketInfo = self.isLeaderboard ? self.marketInfo['sfr'] : self.marketInfo; 
+    //label BTC marketcap positions
+    marketInfo = self.isLeaderboard ? self.marketInfo['btc'] : self.marketInfo; 
     marketInfo.sort(
       function(l, r) {
-        return l['market_cap_in_sfr'] == r['market_cap_in_sfr'] ? 0 : (l['market_cap_in_sfr'] < r['market_cap_in_sfr'] ? 1 : -1)
+        return l['market_cap_in_btc'] == r['market_cap_in_btc'] ? 0 : (l['market_cap_in_btc'] < r['market_cap_in_btc'] ? 1 : -1)
       }
     );
     for(i=0; i < marketInfo.length; i++) {
-      marketInfo[i]['position_sfr'] = i + 1;
+      marketInfo[i]['position_btc'] = i + 1;
     }
-    assert(self.marketCapTables()[1]['base'] == 'SFR');
+    assert(self.marketCapTables()[1]['base'] == 'BTC');
     for(i=0; i < marketInfo.length; i++) {
-      if(!marketInfo[i]['price_in_sfr']) continue;
+      if(!marketInfo[i]['price_in_btc']) continue;
       self.marketCapTables()[1]['data'].push({
-        position: marketInfo[i]['position_sfr'],
+        position: marketInfo[i]['position_btc'],
         asset: marketInfo[i]['asset'],
         dispAsset: AssetLeaderboardViewModel.formulateExtendedAssetInfo(marketInfo[i]['asset'],
           marketInfo[i]['extended_image'], marketInfo[i]['extended_website']),
-        marketCap: marketInfo[i]['market_cap_in_sfr'] ? (smartFormat(marketInfo[i]['market_cap_in_sfr'], 100, 0) + ' SFR') : '',
-        price: marketInfo[i]['aggregated_price_as_sfr'] ? (smartFormat(marketInfo[i]['aggregated_price_as_sfr'], 10, 4) + ' SFR') : '',
+        marketCap: marketInfo[i]['market_cap_in_btc'] ? (smartFormat(marketInfo[i]['market_cap_in_btc'], 100, 0) + ' SFR') : '',
+        price: marketInfo[i]['aggregated_price_as_btc'] ? (smartFormat(marketInfo[i]['aggregated_price_as_btc'], 10, 4) + ' SFR') : '',
         supply: smartFormat(marketInfo[i]['total_supply'], 100, 4) + ' ' + marketInfo[i]['asset'],
         //volume: marketInfo[i]['24h_summary']['vol'] ? (smartFormat(marketInfo[i]['24h_summary']['vol'], 100, 4) + ' ' + marketInfo[i]['asset']) : '',
-        //volume: (marketInfo[i]['24h_ohlc_in_sfr']['vol'] && marketInfo[i]['aggregated_price_in_sfr']) 
-        //  ? (smartFormat(marketInfo[i]['24h_ohlc_in_sfr']['vol'] * marketInfo[i]['aggregated_price_in_sfr'], 0, 4) + ' SFR') : '',
-        volume: (marketInfo[i]['24h_summary'] && marketInfo[i]['24h_summary']['vol'] && marketInfo[i]['aggregated_price_in_sfr']) 
-          ? (smartFormat(marketInfo[i]['24h_summary']['vol'] * marketInfo[i]['aggregated_price_in_sfr'], 10, 4) + ' SFR') : '',
-        pctChange: marketInfo[i]['24h_vol_price_change_in_sfr'] ? (smartFormat(marketInfo[i]['24h_vol_price_change_in_sfr'], 0, 2) + ' %') : '',
-        pctChangeColorClass: marketInfo[i]['24h_vol_price_change_in_sfr'] > 0 ? 'txt-color-green' : (marketInfo[i]['24h_vol_price_change_in_sfr'] < 0 ? 'txt-color-red' : 'initial'),
-        history: marketInfo[i]['7d_history_in_sfr'],
+        //volume: (marketInfo[i]['24h_ohlc_in_btc']['vol'] && marketInfo[i]['aggregated_price_in_btc']) 
+        //  ? (smartFormat(marketInfo[i]['24h_ohlc_in_btc']['vol'] * marketInfo[i]['aggregated_price_in_btc'], 0, 4) + ' SFR') : '',
+        volume: (marketInfo[i]['24h_summary'] && marketInfo[i]['24h_summary']['vol'] && marketInfo[i]['aggregated_price_in_btc']) 
+          ? (smartFormat(marketInfo[i]['24h_summary']['vol'] * marketInfo[i]['aggregated_price_in_btc'], 10, 4) + ' SFR') : '',
+        pctChange: marketInfo[i]['24h_vol_price_change_in_btc'] ? (smartFormat(marketInfo[i]['24h_vol_price_change_in_btc'], 0, 2) + ' %') : '',
+        pctChangeColorClass: marketInfo[i]['24h_vol_price_change_in_btc'] > 0 ? 'txt-color-green' : (marketInfo[i]['24h_vol_price_change_in_btc'] < 0 ? 'txt-color-red' : 'initial'),
+        history: marketInfo[i]['7d_history_in_btc'],
 
-        marketCapRaw: marketInfo[i]['market_cap_in_sfr'],
-        priceRaw: marketInfo[i]['aggregated_price_as_sfr'],
+        marketCapRaw: marketInfo[i]['market_cap_in_btc'],
+        priceRaw: marketInfo[i]['aggregated_price_as_btc'],
         supplyRaw: marketInfo[i]['total_supply'],
-        volumeRaw: marketInfo[i]['24h_ohlc_in_sfr'] ? marketInfo[i]['24h_ohlc_in_sfr']['vol'] : 0,
-        pctChangeRaw: marketInfo[i]['24h_vol_price_change_in_sfr']
+        volumeRaw: marketInfo[i]['24h_ohlc_in_btc'] ? marketInfo[i]['24h_ohlc_in_btc']['vol'] : 0,
+        pctChangeRaw: marketInfo[i]['24h_vol_price_change_in_btc']
       });
     }
     
@@ -130,11 +130,11 @@ var AssetLeaderboardViewModel = CClass.create(function() {
     self.generateAssetMiniCharts();
   }
   
-  self.showPortfolioIncSFR = function() {
+  self.showPortfolioInXCP = function() {
     self.showPortfolioIn("cSFR");
   }
   
-  self.showPortfolioInSFR = function() {
+  self.showPortfolioInBTC = function() {
     self.showPortfolioIn("SFR");
   }
   
@@ -220,7 +220,7 @@ AssetLeaderboardViewModel.formulateExtendedAssetInfo = function(asset, hasImage,
   var dispAsset = asset;
   if(asset == 'cSFR' || asset == 'SFR') {
     dispAsset = '<img src="assets/' + asset + '.png" />&nbsp;';
-    var website = asset == 'cSFR' ? "http://saffroncoin.com/csfr" : "http://saffroncoin.com";
+    var website = asset == 'cSFR' ? "http://www.counterparty.co" : "http://www.bitcoin.org";
     dispAsset += '<a href="' + website + '" target="_blank">' + asset + '</a>';
   } else if(hasImage) {
     dispAsset = '<img src="' + (USE_TESTNET ? '/_t_asset_img/' : '/_asset_img/') + asset + '.png" />&nbsp;';

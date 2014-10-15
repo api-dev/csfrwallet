@@ -11,7 +11,7 @@ function ChangeAddressLabelModalViewModel() {
       validator: function (val, self) {
         return val.length <= 75;
       },
-      message: 'Invalid label (max 75 characters)',
+      message: i18n.t('invalid_address_label'),
       params: self
     }    
   });
@@ -67,18 +67,18 @@ function ChangeAddressLabelModalViewModel() {
 
 
 ko.validation.rules['canGetAddressPubKey'] = {
-      async: true,
-      message: 'Can\'t find the public key for this address. Please make a transaction with it and try again.',
-      validator: function (val, self, callback) {
-        if(self.addressType() != 'armory') return true; //only necessary for armory offline addresses
-        failoverAPI("get_pubkey_for_address", {'address': val},
-          function(data, endpoint) {
-            self.armoryPubKey(data);
-            return data ? callback(true) : callback(false)
-          }
-        );   
+  async: true,
+  message: i18n.t('cant_find_public_key'),
+  validator: function (val, self, callback) {
+    if(self.addressType() != 'armory') return true; //only necessary for armory offline addresses
+    failoverAPI("get_pubkey_for_address", {'address': val},
+      function(data, endpoint) {
+        self.armoryPubKey(data);
+        return data ? callback(true) : callback(false)
       }
-    };
+    );   
+  }
+};
 
 function CreateNewAddressModalViewModel() {
   var self = this;
@@ -92,14 +92,14 @@ function CreateNewAddressModalViewModel() {
       validator: function (val, self) {
         return (self.addressType() == 'watch' || self.addressType() == 'armory') ? val : true;
       },
-      message: 'This field is required.',
+      message: i18n.t('field_required'),
       params: self
     },{
       validator: function (val, self) {
         if(!val) return true; //the check above will cover it
         return !WALLET.getAddressObj(val);
       },
-      message: 'This address is already in your wallet.',
+      message: i18n.t('address_already_in_wallet'),
       params: self
     }],
     canGetAddressPubKey: self
@@ -110,7 +110,7 @@ function CreateNewAddressModalViewModel() {
       validator: function (val, self) {
         return val.length <= 70; //arbitrary
       },
-      message: 'Address description is more than 70 characters long.',
+      message: i18n.t('address_desc_too_long'),
       params: self
     }    
   });
@@ -121,8 +121,8 @@ function CreateNewAddressModalViewModel() {
   });
   
   self.dispWindowTitle = ko.computed(function() {
-    return self.addressType() == 'normal' ? 'Create New Address' : (
-      self.addressType() == 'watch' ? 'Add Watch Address' : 'Add Armory Offline Address');
+    return self.addressType() == 'normal' ? i18n.t('create_new_address') : (
+      self.addressType() == 'watch' ? i18n.t('add_watch_address') : i18n.t('add_armory_adress'));
   }, self);
 
   self.resetForm = function() {
@@ -177,7 +177,7 @@ function CreateNewAddressModalViewModel() {
     //save prefs to server
     WALLET.storePreferences(function(data, endpoint) {
       self.shown(false);      
-      WALLET.refreshcSFRBalances([newAddress]);
+      WALLET.refreshCounterpartyBalances([newAddress]);
       WALLET.refreshBTCBalances();
     });
     trackEvent('Balances', self.addressType() == 'normal' ? 'CreateNewAddress' : (
@@ -225,7 +225,7 @@ function SendModalViewModel() {
         }
         return true;
       },
-      message: 'Quantity entered exceeds your current balance.',
+      message: i18n.t('quantity_exceeds_balance'),
       params: self
     }   
   });
@@ -292,8 +292,8 @@ function SendModalViewModel() {
         _divisible: self.divisible()
       },
       function(txHash, data, endpoint, addressType, armoryUTx) {
-        var message = "<b>Your funds " + (armoryUTx ? "will be" : "were") + " sent. ";
-        WALLET.showTransactionCompleteDialog(message + ACTION_PENDING_NOTICE, message, armoryUTx);
+        var message = "<b>" + (armoryUTx ? i18n.t("will_be_sent") : i18n.t("were_sent")) + " </b>";
+        WALLET.showTransactionCompleteDialog(message + " " + i18n.t(ACTION_PENDING_NOTICE), message, armoryUTx);
       }
     );
     self.shown(false);
@@ -302,8 +302,7 @@ function SendModalViewModel() {
   
   self.show = function(fromAddress, asset, rawBalance, isDivisible, resetForm) {
     if(asset == 'SFR' && rawBalance == null) {
-      return bootbox.alert("Cannot send <b class='notoAssetColor'>SFR</b> right now, as we cannot currently get"
-        + " in touch with the server to get your balance. Please try again later.");
+      return bootbox.alert(i18n.t("cannot_send_server_unavailable"));
     }
     assert(rawBalance, "Balance is null or undefined?");
     
@@ -333,7 +332,7 @@ var SweepAssetInDropdownItemModel = function(asset, rawBalance, normalizedBalanc
   this.ASSET = asset;
   this.RAW_BALANCE = rawBalance; //raw
   this.NORMALIZED_BALANCE = normalizedBalance; //normalized
-  this.SELECT_LABEL = asset + " (bal: " + normalizedBalance + ")";
+  this.SELECT_LABEL = asset + " (" + i18n.t("bal") + " " + normalizedBalance + ")";
   this.ASSET_INFO = assetInfo;
 };
 
@@ -345,7 +344,7 @@ var privateKeyValidator = function(required) {
       validator: function (val, self) {       
         return (new CWPrivateKey(val)).isValid();
       },
-      message: 'Not a valid' + (USE_TESTNET ? ' TESTNET ' : ' ') + 'private key.',
+      message: USE_TESTNET ? i18n.t('not_valid_testnet_pk') : i18n.t('not_valid_pk'),
       params: self
     }, 
     rateLimit: { timeout: 500, method: "notifyWhenChangesStop" }
@@ -387,17 +386,14 @@ function SweepModalViewModel() {
 
         //$.jqlog.debug('Total sweeping cost : ' + sweepingCost);
 
-        // here we assume that the transaction cost to send BTC from addressForFees is MIN_FEE
+        // here we assume that the transaction cost to send SFR from addressForFees is MIN_FEE
         var totalBtcBalanceForSweeep = self.btcBalanceForPrivateKey() + Math.max(0, (self.addressForFeesBalance()-MIN_FEE));
         self.missingBtcForFees = Math.max(MULTISIG_DUST_SIZE, sweepingCost - self.btcBalanceForPrivateKey());
    
 
         if  (totalBtcBalanceForSweeep < sweepingCost) {
           
-          this.message = "We're not able to sweep all of the tokens you selected. Please send "
-                        + normalizeQuantity(self.missingBtcForFees)
-                        + " SFR transactions to address " + self.addressForPrivateKey() + " and try again."
-                        + " OR use the following fields to pay fees with another address";          
+          this.message = i18n.t("not_able_to_sweep", normalizeQuantity(self.missingBtcForFees), self.addressForPrivateKey());          
           self.notEnoughBTC(true);
           return false;
 
@@ -498,15 +494,15 @@ function SweepModalViewModel() {
           self.sweepAssetsCost[balancesData[i]['asset']] = cost;          
         }
 
-        //Also get the BTC balance at this address and put at head of the list
+        //Also get the SFR balance at this address and put at head of the list
         //We just check if unconfirmed balance > 0.      
         WALLET.retriveBTCAddrsInfo([address], function(data) {
           self.btcBalanceForPrivateKey(0);
           self.txoutsCountForPrivateKey = 0;
-          //TODO: csfrblockd return unconfirmedRawBal==0, after fixing we need use unconfirmedRawBal
+          //TODO: counterblockd return unconfirmedRawBal==0, after fixing we need use unconfirmedRawBal
           var unconfirmedRawBal = data[0]['confirmedRawBal']; 
           if(unconfirmedRawBal > 0) {
-            //We don't need to supply asset info to the SweepAssetInDropdownItemModel constructor for BTC
+            //We don't need to supply asset info to the SweepAssetInDropdownItemModel constructor for SFR
             // b/c we won't be transferring any asset ownership with it
             var viewModel = new SweepAssetInDropdownItemModel("SFR", unconfirmedRawBal, normalizeQuantity(unconfirmedRawBal));
             self.availableAssetsToSweep.unshift(viewModel);
@@ -579,7 +575,7 @@ function SweepModalViewModel() {
   self.showNextMessage = function(message) {      
     var width = self.sweepingCurrentStep * (100 / self.availableAssetsToSweep().length);
     self.sweepingProgressWidth(width+'%');
-    var message = "Step "+self.sweepingCurrentStep+"/"+self.availableAssetsToSweep().length+" : "+message;
+    var message = i18n.t('step_x_of_y_message', self.sweepingCurrentStep, self.availableAssetsToSweep().length, message);
     self.sweepingProgressionMessage(message);
     $.jqlog.debug(message);
   }
@@ -599,21 +595,21 @@ function SweepModalViewModel() {
     for(var i = 0; i < opsComplete.length; i++) {
       if(opsComplete[i]['result']) {
         if(opsComplete[i]['type'] == 'send') {
-          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + ":</b> Sent"
-            + " <b class='notoQuantityColor'>" + opsComplete[i]['normalized_quantity'] + "</b>"
-            + " <b class='notoAssetColor'>" + opsComplete[i]['asset'] + "</b>"
-            + " to <b class='notoAddrColor'>" + getAddressLabel(opsComplete[i]['to']) + "</b></li>");  
+          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + ":</b> " + 
+                        i18n.t('asset_sent_to', opsComplete[i]['normalized_quantity'], opsComplete[i]['asset'], getAddressLabel(opsComplete[i]['to']))+ "</b>" 
+            + "</li>");  
         } else {
           assert(opsComplete[i]['type'] == 'transferOwnership');
-          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + ":</b> Transferred ownership"
-            + " to <b class='notoAddrColor'>" + getAddressLabel(opsComplete[i]['to']) + "</b></li>");  
+          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + ":</b> " + 
+                        i18n.t('transferred_ownership', getAddressLabel(opsComplete[i]['to']))+ "</b>" 
+            + "</li>");  
         }
       } else {
         if(opsComplete[i]['type'] == 'send') {
-          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + "</b>: Funds not sent due to failure.</li>");
+          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + "</b>: " + i18n.t("funds_sent_failure") + "</li>");
         } else {
           assert(opsComplete[i]['type'] == 'transferOwnership');
-          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + "</b>: Ownership not transferred due to failure.</li>");
+          assetDisplayList.push("<li><b class='notoAssetColor'>" + opsComplete[i]['asset'] + "</b>: " + i18n.t("ownership_transfer_failure") + "</li>");
         }  
       }
     }
@@ -623,9 +619,8 @@ function SweepModalViewModel() {
         self.show(true, true, self.addressForPrivateKey());
       }
     }
-    bootbox.alert("The sweep from address <b class='notoAddrColor'>" + self.addressForPrivateKey()
-      + "</b> is complete.<br/>Sweep results:<br/><br/><ul>" + assetDisplayList.join('') + "</ul>"
-      + ACTION_PENDING_NOTICE, alertCallback);
+    bootbox.alert(i18n.t("sweep_from_completed", self.addressForPrivateKey()) + "<br/><br/><ul>" + assetDisplayList.join('') + "</ul>"
+      + " " + i18n.t(ACTION_PENDING_NOTICE), alertCallback);
   }
   
 
@@ -657,19 +652,19 @@ function SweepModalViewModel() {
     var sweepBTC = false;
     for(var i = 0; i < self.selectedAssetsToSweep().length; i++) {
       var assetName = self.selectedAssetsToSweep()[i];
-      if (assetName=='SFR') sweepBTC = true;
+      if (assetName=='BTC') sweepBTC = true;
     }
     if (sweepBTC) {
       self.missingBtcForFees += REGULAR_DUST_SIZE;
     }
-    $.jqlog.debug('missingBtcForFees: '+self.missingBtcForFees);
+    $.jqlog.debug('missingSFRForFees: '+self.missingBtcForFees);
 
     var sendData = {
       source: self.addressForPrivateKeyForFees(),
       destination: self.addressForPrivateKey(),
       quantity: self.missingBtcForFees,
       asset: 'SFR',
-      encoding: 'auto',
+      encoding: 'multisig',
       pubkey: pubkey,
       allow_unconfirmed_inputs: true
     };
@@ -694,27 +689,26 @@ function SweepModalViewModel() {
         bootbox.alert(arguments[1]);
       } else {
         self.shown(false);
-        bootbox.alert('Consensus Error!');
+        bootbox.alert(i18n.t('consensus_error'));
       }
     }
     var onConsensusError = onTransactionError;
     var onSysError = onTransactionError;
     var onBroadcastError = onTransactionError;
 
-    var message = "Sending " + normalizeQuantity(self.missingBtcForFees) + " SFR from "
-                  + self.addressForPrivateKeyForFees() + " to pay sweeping fees.";
+    var message = i18n.t("sending_btc_for_sweeping_fees", normalizeQuantity(self.missingBtcForFees), self.addressForPrivateKeyForFees());
     self.sweepingProgressionMessage(message);
     $.jqlog.debug(message);
     multiAPIConsensus("create_send", sendData, onTransactionCreated, onConsensusError, onSysError);
   }
 
   // in first step, we merge all outputs for chaining: each change output serve as input for next transaction.
-  // so the final balance for btc transfert is the value of last change that we get with extractChangeTxoutValue()
-  // TODO: think for a more economic way to have a reliable amount for the final tx (BTC).
+  // so the final balance for sfr transfert is the value of last change that we get with extractChangeTxoutValue()
+  // TODO: think for a more economic way to have a reliable amount for the final tx (SFR).
   self.mergeOutputs = function(key, pubkey, callback, fees) {
     if (self.txoutsCountForPrivateKey>1) {
 
-      var message = "Preparing output for transactions chaining";
+      var message = i18n.t("peparing_transaction_chaining");
       self.sweepingProgressionMessage(message);
       $.jqlog.debug(message);
 
@@ -727,7 +721,7 @@ function SweepModalViewModel() {
         destination: self.addressForPrivateKey(),
         quantity: self.btcBalanceForPrivateKey()-fees,
         asset: 'SFR',
-        encoding: 'auto',
+        encoding: 'multisig',
         pubkey: pubkey,
         allow_unconfirmed_inputs: true,
         fee: fees
@@ -735,10 +729,10 @@ function SweepModalViewModel() {
 
       var onTransactionError = function() {
         if (arguments.length==4) {
-          var match = arguments[1].match(/Insufficient saffroncoins at address [^\s]+\. \(Need approximately ([\d]+\.[\d]+) SFR/);
+          var match = arguments[1].match(/Insufficient bitcoins at address [^\s]+\. \(Need approximately ([\d]+\.[\d]+) SFR/);
           if (match!=null) {
             $.jqlog.debug(arguments[1]);
-            // if insufficient bitcoins we retry with estimated fees return by csfrd
+            // if insufficient bitcoins we retry with estimated fees return by counterpartyd
             var minEstimateFee = denormalizeQuantity(parseFloat(match[1])) - (self.btcBalanceForPrivateKey() - self.mergeCost);
             $.jqlog.debug('Insufficient fees. Need approximately ' + normalizeQuantity(minEstimateFee));
             if (minEstimateFee > self.btcBalanceForPrivateKey()) {
@@ -757,7 +751,7 @@ function SweepModalViewModel() {
           
 
         } else {
-          bootbox.alert('Consensus Error!');
+          bootbox.alert(i18n.t('consensus_error'));
         }
       }
       var onConsensusError = onTransactionError;
@@ -789,7 +783,7 @@ function SweepModalViewModel() {
   self._doTransferAsset = function(selectedAsset, key, pubkey, opsComplete, callback) {
     assert(selectedAsset.ASSET && selectedAsset.ASSET_INFO);
 
-    self.showNextMessage("Transferring asset " + selectedAsset.ASSET + " from " + self.addressForPrivateKey() + " to " + self.destAddress());
+    self.showNextMessage(i18n.t("transferring_asset_from_to", selectedAsset.ASSET, self.addressForPrivateKey(), self.destAddress()));
     
     var transferData = {
       source: self.addressForPrivateKey(),
@@ -801,7 +795,7 @@ function SweepModalViewModel() {
       call_date: selectedAsset.ASSET_INFO['call_date'] ? selectedAsset.ASSET_INFO['call_date'] : null,
       call_price: selectedAsset.ASSET_INFO['call_price'] ? parseFloat(selectedAsset.ASSET_INFO['call_price']) : null,
       transfer_destination: self.destAddress(),
-      encoding: 'auto',
+      encoding: 'multisig',
       pubkey: pubkey,
       allow_unconfirmed_inputs: true
     };
@@ -819,7 +813,7 @@ function SweepModalViewModel() {
           });
           PENDING_ACTION_FEED.add(issuanceTxHash, "issuances", transferData);
 
-          // here we adjust the BTC balance whith the change output
+          // here we adjust the SFR balance whith the change output
           var newBtcBalance = CWBitcore.extractChangeTxoutValue(transferData.source, unsignedTxHex);
           $.jqlog.debug("New SFR balance: "+newBtcBalance);
           self.btcBalanceForPrivateKey(newBtcBalance);
@@ -889,8 +883,8 @@ function SweepModalViewModel() {
       }
     }
 
-    self.showNextMessage("Sweeping " + normalizedQuantity + " " + selectedAsset.ASSET + " from "
-      + self.addressForPrivateKey() + " to " + self.destAddress());
+    self.showNextMessage(i18n.t('sweeping_x_assets_from_to', 
+      normalizedQuantity, selectedAsset.ASSET, self.addressForPrivateKey(), self.destAddress()));
       
     //dont use WALLET.doTransaction for this...
     var sendData = {
@@ -898,11 +892,11 @@ function SweepModalViewModel() {
       destination: self.destAddress(),
       quantity: quantity,
       asset: selectedAsset.ASSET,
-      encoding: 'auto',
+      encoding: 'multisig',
       pubkey: pubkey,
       allow_unconfirmed_inputs: true
     };
-    multiAPIConsensus("create_send", sendData, //can send both BTC and csfr assets
+    multiAPIConsensus("create_send", sendData, //can send both SFR and cSFR assets
       function(unsignedTxHex, numTotalEndpoints, numConsensusEndpoints) {
         
         var signedHex = key.checkAndSignRawTransaction(unsignedTxHex, [self.destAddress()]);
@@ -919,14 +913,14 @@ function SweepModalViewModel() {
           sendData['_divisible'] = !(selectedAsset.RAW_BALANCE == selectedAsset.NORMALIZED_BALANCE); //if the balances match, the asset is NOT divisible
           PENDING_ACTION_FEED.add(sendTxHash, "sends", sendData);
           
-          // here we adjust the BTC balance whith the change output
+          // here we adjust the SFR balance whith the change output
           if (selectedAsset.ASSET != 'SFR') {
             var newBtcBalance = CWBitcore.extractChangeTxoutValue(sendData.source, unsignedTxHex);
             $.jqlog.debug("New SFR balance: " + newBtcBalance);
             self.btcBalanceForPrivateKey(newBtcBalance);
           }
 
-          //For non BTC/XCP assets, also take ownership (iif the address we are sweeping from is the asset's owner')
+          //For non SFR/cSFR assets, also take ownership (iif the address we are sweeping from is the asset's owner')
           if (selectedAsset.ASSET != 'cSFR'
              && selectedAsset.ASSET != 'SFR'
              && selectedAsset.ASSET_INFO['owner'] == self.addressForPrivateKey()) {
@@ -991,7 +985,7 @@ function SweepModalViewModel() {
     for(var i = 0; i < self.selectedAssetsToSweep().length; i++) {
       selectedAsset = self.selectedAssetsToSweep()[i];
       if(selectedAsset == 'SFR') {
-        hasBTC = i; //send BTC last so the sweep doesn't randomly eat our primed txouts for the other assets
+        hasBTC = i; //send SFR last so the sweep doesn't randomly eat our primed txouts for the other assets
       } else {
         sendsToMake.push([selectedAsset, cwk, pubkey, opsComplete, null]);
       }
@@ -1155,28 +1149,28 @@ function TestnetBurnModalViewModel() {
   var self = this;
   self.shown = ko.observable(false);
   self.address = ko.observable(''); // SOURCE address (supplied)
-  self.btcAlreadyBurned = ko.observable(null); // quantity BTC already burned from this address (normalized)
+  self.btcAlreadyBurned = ko.observable(null); // quantity SFR already burned from this address (normalized)
 
   self.btcBurnQuantity = ko.observable('').extend({
     required: true,
     isValidPositiveQuantity: self,
     validation: [{
       validator: function (val, self) {
-        return parseFloat(val) > 0 && parseFloat(val) <= 20000;
+        return parseFloat(val) > 0 && parseFloat(val) <= 1;
       },
-      message: 'Quantity entered must be between 0 and 20000 SFR.',
+      message: i18n.t('quantity_must_be_between_0_and_1'),
       params: self
     },{
       validator: function (val, self) {
         return parseFloat(val) <= WALLET.getBalance(self.address(), 'SFR') - normalizeQuantity(MIN_FEE);
       },
-      message: 'The quantity of SFR entered exceeds your available balance.',
+      message: i18n.t('quantity_of_exceeds_balance', 'SFR'),
       params: self
     },{
       validator: function (val, self) {
-        return !(parseFloat(val) > 20000 - self.btcAlreadyBurned());
+        return !(parseFloat(val) > 1 - self.btcAlreadyBurned());
       },
-      message: 'You can only burn <b>20000 SFR</b> total for any given address. Even over multiple burns, the total quantity must be less than <b>20000 SFR</b>.',
+      message: i18n.t('you_can_only_burn'),
       params: self
     }]
   });
@@ -1192,7 +1186,7 @@ function TestnetBurnModalViewModel() {
   
   self.maxPossibleBurn = ko.computed(function() { //normalized
     if(self.btcAlreadyBurned() === null) return null;
-    return Math.min(20000 - self.btcAlreadyBurned(), WALLET.getAddressObj(self.address()).getAssetObj('SFR').normalizedBalance())
+    return Math.min(1 - self.btcAlreadyBurned(), WALLET.getAddressObj(self.address()).getAssetObj('SFR').normalizedBalance()) 
   }, self);
   
   self.validationModel = ko.validatedObservable({
@@ -1221,11 +1215,13 @@ function TestnetBurnModalViewModel() {
       function(txHash, data, endpoint, addressType, armoryUTx) {
         self.shown(false);
 
-        var message = "You " + (armoryUTx ? "will be burning" : "have burned") + " <b class='notoQuantityColor'>" + self.btcBurnQuantity() + "</b>"
-          + " <b class='notoAssetColor'>SFR</b> for approximately"
-          + " <b class='notoQuantityColor'>" + self.quantityXCPToBeCreated() + "</b>"
-          + " <b class='notoAssetColor'>cSFR</b>. ";
-        WALLET.showTransactionCompleteDialog(message + ACTION_PENDING_NOTICE, message, armoryUTx);
+        var message;
+        if (armoryUTx) {
+          message = i18n.t("you_will_be_burning", self.btcBurnQuantity(), self.quantityXCPToBeCreated());
+        } else {
+          message = i18n.t("you_have_burned", self.btcBurnQuantity(), self.quantityXCPToBeCreated());
+        }
+        WALLET.showTransactionCompleteDialog(message + " " + i18n.t(ACTION_PENDING_NOTICE), message, armoryUTx);
       }
     );
     trackEvent('Balances', 'TestnetBurn');
@@ -1236,7 +1232,7 @@ function TestnetBurnModalViewModel() {
     if(resetForm) self.resetForm();
     self.address(address);
     
-    //get the current block height, to calculate the XCP burn payout
+    //get the current block height, to calculate the cSFR burn payout
     //determine whether the selected address has burned before, and if so, how much
     failoverAPI("get_burns", {filters: {'field': 'source', 'op': '==', 'value': address}}, function(data, endpoint) {
       var totalBurned = 0;
@@ -1367,8 +1363,8 @@ function BroadcastModalViewModel() {
     
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       self.hide();
-      WALLET.showTransactionCompleteDialog("Broadcast transmitted. " + ACTION_PENDING_NOTICE,
-        "Broadcast to be transmitted", armoryUTx);
+      WALLET.showTransactionCompleteDialog(i18n.t("broadcast_transmitted") + " " + i18n.t(ACTION_PENDING_NOTICE),
+        i18n.t("broadcast_to_be_transmitted"), armoryUTx);
     }
 
     var onError = function(jqXHR, textStatus, errorThrown, endpoint) {
@@ -1438,7 +1434,7 @@ function SignTransactionModalViewModel() {
     if (self.validTx()) {
       var onSuccess = function(txHash, endpoint) {
         self.shown(false);
-        bootbox.alert("Your transaction were broacasted successfully:<br /><br /><b>"+txHash+"</b>");
+        bootbox.alert(i18n.t("your_tx_broadcast_success") + "<br /><br /><b>"+txHash+"</b>");
       }
 
       WALLET.broadcastSignedTx(self.signedTx(), onSuccess, defaultErrorHandler);
@@ -1488,7 +1484,7 @@ function ArmoryBroadcastTransactionModalViewModel() {
   self.doAction = function() {
     var onSuccess = function(txHash, data, endpoint, addressType, armoryUTx) {
       self.hide();
-      var message = "<b>Transaction broadcast successfully!</b><br/><br/>Transaction ID: " + txHash;
+      var message = i18n.t("your_tx_broadcast_success") + "<br /><br /><b>"+txHash+"</b>";
       WALLET.showTransactionCompleteDialog(message, message, armoryUTx);
     }
     

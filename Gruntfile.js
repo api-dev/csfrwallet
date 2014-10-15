@@ -11,19 +11,20 @@ module.exports = function (grunt) {
                 srcDir: 'src/',
                 assetsHome: 'assets/',
                 checkDeps: true,
-                depsDir: 'vendors/',
+                depsDir: 'vendors/'
                 /*cdn: {
                     hosts: {
-                        'css': ['https://css1.csfrwallet.dev', 'https://css2.csfrwallet.dev'],
-                        'js': ['https://js1.csfrwallet.dev', 'https://js2.csfrwallet.dev'],
-                        'assets': ['https://assets1.csfrwallet.dev', 'https://assets2.csfrwallet.dev']
+                        'css': ['https://css1.counterwallet.dev', 'https://css2.counterwallet.dev'],
+                        'js': ['https://js1.counterwallet.dev', 'https://js2.counterwallet.dev'],
+                        'assets': ['https://assets1.counterwallet.dev', 'https://assets2.counterwallet.dev']
                     }
                 }*/
             },
             process: {
                 files: [
                     {cwd: 'src/', src: 'index.html', dest: buildDir, expand: true},
-                    {cwd: 'src/pages/', src: '*.html', dest: buildDir+'pages/', expand: true}
+                    {cwd: 'src/pages/', src: '*.html', dest: buildDir+'pages/', expand: true},
+                    {cwd: 'src/locales/en', src: '*.json', dest: buildDir+'locales/en', expand: true}
                 ]
             },
             copy: {
@@ -32,11 +33,14 @@ module.exports = function (grunt) {
                     {cwd: 'src/assets/', src: '*', dest: buildDir+'assets/', expand: true}
                 ]
             }
+        },
+        transifex: {
+            languages: ['fr', 'de', 'da', 'zh_CN', 'zh_TW', 'fi', 'tr', 'it', 'ja', 'es', 'ru']
         }
     }
     /*config['chrome-extension'] = {
         options: {
-            name: "csfrwallet",
+            name: "counterwallet",
             version: pkg.version,
             id: "00000000000000000000000000000000",
             //updateUrl: "http://example.com/extension/111111/",

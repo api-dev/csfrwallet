@@ -8,7 +8,7 @@ function MessageFeed() {
 
   self.sellBTCOrdersCount = ko.computed(function() {
     return $.map(self.OPEN_ORDERS, function(item) {       
-        return ('SFR' == item['get_asset']) ? item : null;
+        return ('BTC' == item['get_asset']) ? item : null;
     }).length;
   }, self);
 
@@ -281,7 +281,7 @@ function MessageFeed() {
     }
 
     if (displayTx) {
-      var asset1 = message['bindings']['asset'] || 'SFR';
+      var asset1 = message['bindings']['asset'] || 'BTC';
       WALLET.getAssetsDivisibility([asset1], function(divisibility) {
 
         message['bindings']['divisible'] = divisibility[asset1];
@@ -375,7 +375,7 @@ function MessageFeed() {
       self.lastMessageIndexReceived(message['_last_message_index']);
       $.jqlog.warn("feed:Blockchain reorganization at block " + message['block_index']
         + "; last message idx reset to " + self.lastMessageIndexReceived());
-      setTimeout(function() { WALLET.refreshcSFRBalances(WALLET.getAddressesList(), checkURL); }, randomIntFromInterval(1, 5) * 1000);
+      setTimeout(function() { WALLET.refreshCounterpartyBalances(WALLET.getAddressesList(), checkURL); }, randomIntFromInterval(1, 5) * 1000);
       //^ refresh the current page to regrab the fresh data (give cwd a second to sync up though)
       // also, wait a random interval to do this between 1 and 5 seconds, to avoid dog-piling the server
       //TODO/BUG??: do we need to "roll back" old messages on the bad chain???
@@ -395,8 +395,8 @@ function MessageFeed() {
     // (do this even in cases where the entry does not exist in pendingActions, as the user could have logged out and back in)
     if(message['_status'] && _.startsWith(message['_status'], 'invalid') && WALLET.getAddressObj(message['source'])) {
       var actionText = PendingActionViewModel.calcText(category, message); //nice "good enough" shortcut method here
-      bootbox.alert("<b class='errorColor'>Network processing of the following action failed:</b><br/><br/>"
-        + actionText + "<br/><br/><b>Reason:</b> " + message['_status']);
+      bootbox.alert("<b class='errorColor'>" + i18n.t('network_processing_failed') + ":</b><br/><br/>"
+        + actionText + "<br/><br/><b>" + i18n.t("reason") + ":</b> " + message['_status']);
     }
 
     //Insert the message into the stats page (if it has been initialized)
@@ -429,7 +429,7 @@ function MessageFeed() {
       //DO NOTHING
     } else if(category == "credits" || category == "debits") {
       if(WALLET.getAddressObj(message['address'])) {
-        //remove non-BTC/XCP asset objects that now have a zero balance from a debit
+        //remove non-SFR/cSFR asset objects that now have a zero balance from a debit
         if(message['_balance'] == 0 && message['asset'] != "SFR" && message['asset'] != "cSFR") {
           assert(category == "debits"); //a credit to a balance of zero?? Yes with unconfirmed balance>0
           var addressObj = WALLET.getAddressObj(message['address']);
@@ -510,8 +510,8 @@ function MessageFeed() {
       
       //Look to order matches when determining to do a BTCpay
       //If the order_matches message doesn't have a tx0_address/tx1_address field, then we don't need to do anything with it
-      if ((WALLET.getAddressObj(message['tx0_address']) && message['forward_asset'] == 'SFR' && message['_status'] == 'pending')
-         || (WALLET.getAddressObj(message['tx1_address']) && message['backward_asset'] == 'SFR' && message['_status'] == 'pending')) {
+      if ((WALLET.getAddressObj(message['tx0_address']) && message['forward_asset'] == 'BTC' && message['_status'] == 'pending')
+         || (WALLET.getAddressObj(message['tx1_address']) && message['backward_asset'] == 'BTC' && message['_status'] == 'pending')) {
         //Register this as an "upcoming" BTCpay
         var btcPayData = WaitingBTCPayFeedViewModel.makeBTCPayData(message); 
         //Don't include in UPCOMING_BTCPAY_FEED BTCpays which are for less than the current (multisig) dust amount
@@ -521,8 +521,8 @@ function MessageFeed() {
           $.jqlog.debug("dust order_matches "+btcPayData['orderMatchID']+" : "+btcPayData['btcQuantityRaw']);
         }  
         
-      } else if ((WALLET.getAddressObj(message['tx1_address']) && message['forward_asset'] == 'SFR' && message['_status'] == 'pending')
-         || (WALLET.getAddressObj(message['tx0_address']) && message['backward_asset'] == 'SFR' && message['_status'] == 'pending')) {
+      } else if ((WALLET.getAddressObj(message['tx1_address']) && message['forward_asset'] == 'BTC' && message['_status'] == 'pending')
+         || (WALLET.getAddressObj(message['tx0_address']) && message['backward_asset'] == 'BTC' && message['_status'] == 'pending')) {
 
         PENDING_ACTION_FEED.add(txHash, category, message);
       }

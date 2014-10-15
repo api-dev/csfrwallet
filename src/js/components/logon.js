@@ -51,9 +51,10 @@ function WalletCreationViewModel() {
 
   self.createWallet = function() {
     self.hide();
-    WALLET.isExplicitlyNew(true);
-    LOGON_VIEW_MODEL.enteredPassphrase(self.generatedPassphrase());
-    LOGON_VIEW_MODEL.openWallet();
+    bootbox.alert(i18n.t("your_wallet_is_ready"));
+    //WALLET.isExplicitlyNew(true);
+    //LOGON_VIEW_MODEL.enteredPassphrase(self.generatedPassphrase());
+    //LOGON_VIEW_MODEL.openWallet();
   }
 
 }
@@ -148,10 +149,10 @@ function LogonViewModel() {
       WALLET.identifier(hash);
       $.jqlog.log("My wallet ID: " + WALLET.identifier());
 
-      //Set initial block height (will be updated again on each periodic refresh of BTC account balances)
+      //Set initial block height (will be updated again on each periodic refresh of SFR account balances)
       WALLET.networkBlockHeight(data['block_height']);
       
-      //Initialize the socket.io-driven event feed (notifies us in realtime of new events, as csfr processes confirmed blocks)
+      //Initialize the socket.io-driven event feed (notifies us in realtime of new events, as counterparty processes confirmed blocks)
       MESSAGE_FEED.init(data['last_message_index']);
       //^ set the "starting" message_index, under which we will ignore if received on the messages feed
 
@@ -160,6 +161,8 @@ function LogonViewModel() {
       
       // set quote assets
       QUOTE_ASSETS = data['quote_assets']
+
+      QUICK_BUY_ENABLE = data['quick_buy_enable'];
       
       //See if any servers show the wallet as online (this will return the a true result, if any server shows the wallet as online)
       multiAPI("is_wallet_online", {'wallet_id': WALLET.identifier()}, self.onIsWalletOnline);
@@ -167,21 +170,21 @@ function LogonViewModel() {
     },
     function(jqXHR, textStatus, errorThrown, endpoint) {
       var message = describeError(jqXHR, textStatus, errorThrown);
-      bootbox.alert("No SFRDirect servers are currently available. Please try again later. ERROR: " + message);
+      bootbox.alert(i18n.t("no_counterparty_error", message));
     });
   }
 
   self.onIsWalletOnline = function(isOnline, endpoint) {
     if(isOnline) {
       trackEvent("Login", "Wallet", "IsAlreadyOnline");
-      var message = "<b class='errorColor'>You appear to be logged into cSFRwallet elsewhere.</b> It's not safe to be logged into the same wallet account from multiple devices at the same time. If you are sure that this is not the case, press Continue. Otherwise, please press Cancel, logout from your other device, and try again.";
+      var message = i18n.t("multi_connection");
       
       bootbox.dialog({
-        title: "Confirm connection",
+        title: i18n.t("confirm_connection"),
         message: message,
         buttons: {
           "cancel": {
-            label: "Cancel",
+            label: i18n.t("cancel"),
             className: "btn-danger",
             callback: function() {
               bootbox.hideAll();
@@ -190,7 +193,7 @@ function LogonViewModel() {
             }
           },
           "continue": {
-            label: "Continue",
+            label: i18n.t("continue"),
             className: "btn-primary",
             callback: function() {
               multiAPINewest("get_preferences", {
@@ -257,8 +260,9 @@ function LogonViewModel() {
       mustSavePreferencesToServer = true;
     }
     
+    PREFERENCES['num_addresses_used'] = Math.min(MAX_ADDRESSES, PREFERENCES['num_addresses_used']);
+
     WALLET_OPTIONS_MODAL.selectedTheme(PREFERENCES['selected_theme']);
-    WALLET_OPTIONS_MODAL.selectedLang(PREFERENCES['selected_lang']);
     
     self.displayLicenseIfNecessary(mustSavePreferencesToServer);
   }
@@ -278,12 +282,15 @@ function LogonViewModel() {
       WALLET.isOldWallet(WALLET.BITCOIN_WALLET.useOldHierarchicalKey);
       //kick off address generation (we have to take this hacky approach of using setTimeout, otherwise the
       // progress bar does not update correctly through the HD wallet build process....)
-      setTimeout(function() { self.genAddress(mustSavePreferencesToServer) }, 1);
+      setTimeout(function() { self.genAddress(mustSavePreferencesToServer, PREFERENCES['num_addresses_used']) }, 1);
   }
   
-  self.genAddress = function(mustSavePreferencesToServer) {
-    var moreAddresses = [], i = null;
-    for (i = 0; i < LOGIN_ADDRESS_GEN_BATCH_SIZE; i++) {
+  self.genAddress = function(mustSavePreferencesToServer, addressCount) {
+    
+    var moreAddresses = [];
+
+    for (var i = 0; i < addressCount; i++) {
+
       var address = WALLET.addAddress('normal');
       var addressHash = hashToB64(address);
       var len = WALLET.addresses().length;
@@ -291,42 +298,44 @@ function LogonViewModel() {
   
       if(PREFERENCES.address_aliases[addressHash] === undefined) { //no existing label. we need to set one
         mustSavePreferencesToServer = true; //if not already true
-        PREFERENCES.address_aliases[addressHash] = "My Address #" + (i + 1);
+        PREFERENCES.address_aliases[addressHash] = i18n.t("default_address_label", len);
       }
 
       $.jqlog.info("Address discovery: Generating address " + len + " of " + PREFERENCES['num_addresses_used']
         + " (num_addresses_used) (" + self.walletGenProgressVal() + "%) -- " + address);
+      
       if(len <= PREFERENCES['num_addresses_used']) { //for visual effect
         var progress = len * (100 / PREFERENCES['num_addresses_used']);
         self.walletGenProgressVal(progress);
       }
+
     }
 
-    //if all addresses in the batch are utilized, then generate another batch
     WALLET.refreshBTCBalances(false, moreAddresses, function() {
-      var generateAnotherBatch = true;
-      for (i = moreAddresses.length - 1; i >= 0; i--) {
-        if(!WALLET.getAddressObj(moreAddresses[i]).withMovement()) { //no movement on this address...remove it
-          assert(WALLET.addresses()[WALLET.addresses().length - 1].ADDRESS == moreAddresses[i]);
-          if(WALLET.addresses().length > DEFAULT_NUM_ADDRESSES) {
-            $.jqlog.info("Address discovery: Address " + moreAddresses[i] + " unused. Trimming...");
-            WALLET.addresses.pop(); //remove this address
-          } else {
-            $.jqlog.info("Address discovery: Address " + moreAddresses[i] + " unused, but kept as an initial address.");
-          }
-          generateAnotherBatch = false;
-        }
+      
+      var generateAnotherAddress = false;
+      var totalAddresses = WALLET.addresses().length;
+      var lastAddressWithMovement = WALLET.addresses()[totalAddresses - 1].withMovement();
+
+      if (lastAddressWithMovement) {
+        generateAnotherAddress = true;
+      } else if (totalAddresses > PREFERENCES['num_addresses_used'] && !lastAddressWithMovement) {
+        WALLET.addresses.pop();
       }
        
-      if(generateAnotherBatch) {
-        $.jqlog.info("Address discovery: Generating another batch of " + LOGIN_ADDRESS_GEN_BATCH_SIZE + " addresses...");
-        setTimeout(function() { self.genAddress(mustSavePreferencesToServer) }, 1);
-      } else { //last used address processed as part of this batch
+      if (generateAnotherAddress) {
+
+        $.jqlog.info("Address discovery: Generating another address...");
+        setTimeout(function() { self.genAddress(mustSavePreferencesToServer, 1) }, 1);
+
+      } else {
+
         if (PREFERENCES['num_addresses_used'] != WALLET.addresses().length) {
           PREFERENCES['num_addresses_used'] = WALLET.addresses().length;
           mustSavePreferencesToServer = true;
         }
         return self.openWalletPt3(mustSavePreferencesToServer);
+
       }
     });
   }
@@ -335,7 +344,7 @@ function LogonViewModel() {
     //updates all balances for all addesses, creating the asset objects on the address if need be
     WALLET.refreshBTCBalances(true, additionalBTCAddresses, function() {
       //^ specify true here to start a recurring get BTC balances timer chain
-      WALLET.refreshcSFRBalances(WALLET.getAddressesList(), onSuccess);
+      WALLET.refreshCounterpartyBalances(WALLET.getAddressesList(), onSuccess);
     });
   }
   
@@ -343,14 +352,22 @@ function LogonViewModel() {
     //add in the armory and watch only addresses
     var additionalBTCAddresses = [], i = null;
     for(i=0; i < PREFERENCES['armory_offline_addresses'].length; i++) {
-      WALLET.addAddress('armory',
-        PREFERENCES['armory_offline_addresses'][i]['address'],
-        PREFERENCES['armory_offline_addresses'][i]['pubkey_hex']);
-      additionalBTCAddresses.push(PREFERENCES['armory_offline_addresses'][i]['address']);
+      try {
+        WALLET.addAddress('armory',
+          PREFERENCES['armory_offline_addresses'][i]['address'],
+          PREFERENCES['armory_offline_addresses'][i]['pubkey_hex']);
+        additionalBTCAddresses.push(PREFERENCES['armory_offline_addresses'][i]['address']);
+      } catch(e) {
+        $.jqlog.error("Could not generate armory address: " + e);
+      }
     }
     for(i=0; i < PREFERENCES['watch_only_addresses'].length; i++) {
-      WALLET.addAddress('watch', PREFERENCES['watch_only_addresses'][i]);
-      additionalBTCAddresses.push(PREFERENCES['watch_only_addresses'][i]);
+      try {
+        WALLET.addAddress('watch', PREFERENCES['watch_only_addresses'][i]);
+        additionalBTCAddresses.push(PREFERENCES['watch_only_addresses'][i]);
+      } catch(e) {
+        $.jqlog.error("Could not generate watch only address: " + e);
+      }
     }
     
     //store the preferences on the server(s) for future use
@@ -400,9 +417,7 @@ function LicenseModalViewModel() {
     self.shown(true);
     
     //Load in the license file text into the textarea
-    $.get( "pages/license.html", function( data ) {
-      $("#licenseAgreementText").val(data);
-    });
+    $("#licenseAgreementText").val(i18n.t('license'));
   }
 
   self.hide = function() {
@@ -508,7 +523,7 @@ function LogonPasswordModalViewModel() {
     $('#logonPassphaseModal input').keyboard({
       display: {
         'bksp'   :  "\u2190",
-        'accept' : 'Accept',
+        'accept' : i18n.t('accept'),
       },
       layout: 'custom',
       customLayout: {

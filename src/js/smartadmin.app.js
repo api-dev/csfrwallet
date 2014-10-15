@@ -136,7 +136,7 @@ $(document).ready(function() {
     $.root_.removeClass('search-mobile');
   });
 
-  //CSFRWALLET: START MOD
+  //COUNTERWALLET: START MOD
   $('.activity-dropdown').click(function(e) {
     var $this = $(this);
 
@@ -164,7 +164,7 @@ $(document).ready(function() {
 
     e.preventDefault();
   });
-  //CSFRWALLET: END MOD
+  //COUNTERWALLET: END MOD
 
   $(document).mouseup(function(e) {
     if (!$('.ajax-dropdown').is(e.target)// if the target of the click isn't the container...
@@ -223,19 +223,19 @@ $(document).ready(function() {
     $.loginURL = $this.attr('href');
     
     if (needWarningOnExit()) {
-      $.logoutMSG = "<span class='bold txt-color-red'>If you log out, any Saffroncoin sell orders you have open will probably not be filled.</span>";
+      $.logoutMSG = "<span class='bold txt-color-red'>" + i18n.t("exit_warning") + "</span>";
     } else {
       $.logoutMSG = $this.data('logout-msg');
     }
 
     // ask verification
     $.SmartMessageBox({
-      title : "<i class='fa fa-sign-out txt-color-orangeDark'></i> Logout <span class='txt-color-orangeDark'><strong>" + $('#show-shortcut').text() + "</strong></span> ?",
+      title : "<i class='fa fa-sign-out txt-color-orangeDark'></i> " + i18n.t('logout') + " <span class='txt-color-orangeDark'><strong>" + $('#show-shortcut').text() + "</strong></span> ?",
       content : $.logoutMSG || "You can improve your security further after logging out by closing this opened browser",
-      buttons : '[No][Yes]'
+      buttons : '[' + i18n.t('no') + '][' + i18n.t('yes') + ']'
 
     }, function(ButtonPressed) {
-      if (ButtonPressed == "Yes") {
+      if (ButtonPressed == i18n.t('yes')) {
         $.root_.addClass('animated fadeOutUp');
         setTimeout(logout, 1000)
       }
@@ -251,9 +251,9 @@ $(document).ready(function() {
    */
 
   function logout() {
-    //CSFRWALLET: START MOD
+    //COUNTERWALLET: START MOD
     location.reload(false); //this will take care of everything for us :)
-    //CSFRWALLET: END MOD
+    //COUNTERWALLET: END MOD
   }
 
   /*
@@ -319,7 +319,7 @@ $(document).ready(function() {
 
       var elem = $(this);
       elems = elems.add(elem);
-      //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)      
+      //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)      
       try {
         $.data(this, str_data, {
           w : elem.width(),
@@ -331,7 +331,7 @@ $(document).ready(function() {
           h : $(elem[0].container).height()
         });
       }
-      //CSFRWALLETD: END MOD
+      //COUNTERWALLETD: END MOD
       
       if (elems.length === 1) {
         loopy();
@@ -358,7 +358,7 @@ $(document).ready(function() {
 
       function new_handler(e, w, h) {
         var elem = $(this), data = $.data(this, str_data);
-        //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)
+        //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)
         try {
           data.w = w !== undefined ? w : elem.width();
           data.h = h !== undefined ? h : elem.height();
@@ -366,7 +366,7 @@ $(document).ready(function() {
           data.w = w !== undefined ? w : $(elem[0].container).width();
           data.h = h !== undefined ? h : $(elem[0].container).height();
         }
-        //CSFRWALLETD: END MOD
+        //COUNTERWALLETD: END MOD
 
         old_handler.apply(this, arguments);
       };
@@ -383,7 +383,7 @@ $(document).ready(function() {
   function loopy() {
     timeout_id = window[str_setTimeout](function() {
       elems.each(function() {
-        //CSFRWALLETD: START MOD (so that this plays nicely with highstock lib)
+        //COUNTERWALLETD: START MOD (so that this plays nicely with highstock lib)
         //var elem = $(this), width = elem.width(), height = elem.height(), data = $.data(this, str_data);
         var elem = $(this);
         var width = null;
@@ -396,7 +396,7 @@ $(document).ready(function() {
           height = $(elem[0].container).height(); 
         }
         var data = $.data(this, str_data);
-        //CSFRWALLETD: END MOD
+        //COUNTERWALLETD: END MOD
 
         if (width !== data.w || height !== data.h) {
           elem.trigger(str_resize, [data.w = width, data.h = height]);
@@ -430,19 +430,19 @@ function nav_page_height() {
     $.left_panel.css('min-height', setHeight + 'px');
     $.root_.css('min-height', setHeight + $.navbar_height + 'px');
 
-    //CSFRWALLETD: START MOD
+    //COUNTERWALLETD: START MOD
     $('#chatPane').css('height', windowHeight + 'px');
     $('#chatContentDiv').css('height', (windowHeight - 50 - 40 - 20) + 'px');
     $('#chatContentInnerDiv').slimScroll({ height: 'auto' });
-    //CSFRWALLETD: END MOD
+    //COUNTERWALLETD: END MOD
   } else {
     $.left_panel.css('min-height', windowHeight + 'px');
     $.root_.css('min-height', windowHeight + 'px');
-    //CSFRWALLETD: START MOD
+    //COUNTERWALLETD: START MOD
     $('#chatPane').css('height', windowHeight + 'px');
     $('#chatContentDiv').css('height', (windowHeight - 50 - 40 - 20) + 'px');
     $('#chatContentInnerDiv').slimScroll({ height: 'auto' });
-    //CSFRWALLETD: END MOD
+    //COUNTERWALLETD: END MOD
   }
 }
 
@@ -1063,9 +1063,9 @@ function setup_widgets_desktop() {
       widgets : '.jarviswidget',
       localStorage : true,
       deleteSettingsKey : '#deletesettingskey-options',
-      settingsKeyLabel : 'Reset settings?',
+      settingsKeyLabel : i18n.t('reset_settings'),
       deletePositionKey : '#deletepositionkey-options',
-      positionKeyLabel : 'Reset position?',
+      positionKeyLabel : i18n.t('reset_position'),
       sortable : true,
       buttonsHidden : false,
       // toggle button
@@ -1175,7 +1175,7 @@ window.loadGoogleMaps = function() {
  * loadScript("js/my_lovely_script.js", myPrettyCode);
  */
 
-//CSFRWALLET: START MOD
+//COUNTERWALLET: START MOD
 function loadScript(scriptName, callback) {
   var scriptID = "script_" + scriptName.replace(/\//g, "__").replace(/\.js/g, "")
   if($("#" + scriptID).length == 0 || IS_DEV) {
@@ -1199,7 +1199,7 @@ function loadScript(scriptName, callback) {
     callback();
   }
 }
-//CSFRWALLET: END MOD
+//COUNTERWALLET: END MOD
 
 /* ~ END: LOAD SCRIPTS */
 
@@ -1286,12 +1286,12 @@ function checkURL() {
   container = $('#content');
   // Do this if url exists (for page refresh, etc...)
   
-  //CSFRWALLET: START MOD
+  //COUNTERWALLET: START MOD
   //console.log("HERE, url: " + url);
   //console.log("HERE, login pane hidden?: " + $('#logon').is(':hidden'));
   //if (url) {
   if (url && $('#logon').is(':hidden')) {
-  //CSFRWALLET: END MOD
+  //COUNTERWALLET: END MOD
   
     // remove all active class
     $('nav li.active').removeClass("active");
@@ -1306,15 +1306,15 @@ function checkURL() {
     // parse url to jquery
     loadURL(url + location.search, container);
   } else {
-    //CSFRWALLET: START MOD
+    //COUNTERWALLET: START MOD
     //Dont load anything, just reset any hash
     //window.location.hash = '';
-    //CSFRWALLET: END MOD
+    //COUNTERWALLET: END MOD
   }
 
 }
 
-//CSFRWALLET: START MOD
+//COUNTERWALLET: START MOD
 function loadPage(url, container) {
   $.ajax({
     type : "GET",
@@ -1323,7 +1323,7 @@ function loadPage(url, container) {
     cache : !IS_DEV, // yes, in development mode, memory will bloat
     beforeSend : function() {
       // cog placed
-      container.html('<h1><i class="fa fa-cog fa-spin"></i> Loading...</h1>');
+      container.html('<h1><i class="fa fa-cog fa-spin"></i> ' + i18n.t('loading') + '</h1>');
     
       if (container[0] == $("#content")[0]) {
         drawBreadCrumb();
@@ -1344,14 +1344,14 @@ function loadPage(url, container) {
       e.delay(50).animate({ opacity : '1.0' }, 300);
     },
     error : function(xhr, ajaxOptions, thrownError) {
-      container.html('<h4 style="margin-top:10px; display:block; text-align:left"><i class="fa fa-warning txt-color-orangeDark"></i> Error 404! Page not found.</h4>');
+      container.html('<h4 style="margin-top:10px; display:block; text-align:left"><i class="fa fa-warning txt-color-orangeDark"></i> ' + i18n.t('error404') + '</h4>');
     },
     async : false
   });
 }
-//CSFRWALLET: END MOD
+//COUNTERWALLET: END MOD
 
-//CSFRWALLET: START MOD
+//COUNTERWALLET: START MOD
 function loadURL(url, container) {
 
   checkCountry(url, function() {
@@ -1359,7 +1359,7 @@ function loadURL(url, container) {
   });
 
 }
-//CSFRWALLET: END MOD
+//COUNTERWALLET: END MOD
 
 // UPDATE BREADCRUMB
 function drawBreadCrumb() {
@@ -1451,7 +1451,7 @@ $('body').on('click', function(e) {
 });
 
 
-//CSFRWALLET: START MOD
+//COUNTERWALLET: START MOD
 //THIS FUNCTION MOVED OVER FROM datatables.html, and changed the selectors to use classes (e.g. table.dt_basic) instead of IDs (#dt_basic)
 function runDataTables(specificTableID, destroyOption, extraProps) {
   if(typeof(destroyOption)==='undefined') destroyOption = true;
@@ -1476,7 +1476,7 @@ function runDataTables(specificTableID, destroyOption, extraProps) {
     "sPaginationType" : "bootstrap",
     "sDom" : "R<'dt-top-row'Clf>r<'dt-wrapper't><'dt-row dt-bottom-row'<'row'<'col-sm-6'i><'col-sm-6 text-right'p>>",
     "fnInitComplete" : function(oSettings, json) {
-      $('.ColVis_Button').addClass('btn btn-default btn-sm').html('Columns <i class="icon-arrow-down"></i>');
+      $('.ColVis_Button').addClass('btn btn-default btn-sm').html(i18n.t("columns") + ' <i class="icon-arrow-down"></i>');
     }
   };
   $.extend(props, extraProps);
@@ -1492,7 +1492,7 @@ function runDataTables(specificTableID, destroyOption, extraProps) {
     "oTableTools" : {
       "aButtons" : ["copy", {
         "sExtends" : "collection",
-        "sButtonText" : 'Save <span class="caret" />',
+        "sButtonText" : i18n.t('save') + ' <span class="caret" />',
         "aButtons" : ["csv", "xls", "pdf"]
       }],
       "sSwfPath" : "assets/copy_csv_xls_pdf.swf"
@@ -1559,4 +1559,4 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort, {
         return naturalSort(a,b) * -1;
     }
 } );
-//CSFRWALLET: END MOD
+//COUNTERWALLET: END MOD
