@@ -57,13 +57,13 @@
     "src/vendors/htmlcanvas/build/html2canvas.js": "d13063b4e7bdf2a4a37c0d4102aba1f010e369b1f421154e0a78b040bead01c3",
     "src/vendors/sprintf/dist/sprintf.min.js": "e12b992b6797e823c724558ffa0e42c3e3f831c6c6094b19c374b2dae3243e6c",
     "src/vendors/i18next/i18next.min.js": "436aed3d5ea5479c3069d26a2136599bd1e4b7e60ce4dd790c0146b911652422",
-    "src/vendors/csfrwebdeps/js/external/mnemonic.js": "81b0a84f22945c136533e451058142a86fd4849a765c7946c7e1f6fa0c4b1e84",
-    "src/vendors/csfrwebdeps/js/external/qrcode.js": "2ccee33cc815276a83b4b842c789a93c7043e0fd062ef2b0aaab8fa660569dcc",
-    "src/vendors/csfrwebdeps/js/consts.js": "70cecb9318c474187be60b66a1d789122034a825eeb1e86f1561444fcd941604",
-    "src/vendors/csfrwebdeps/js/util.generic.js": "636845d650fe0baf2831ce2ccf169ff05b363a2a77b899e7690c18b52f7e61ae",
-    "src/vendors/csfrwebdeps/js/util.analytics.js": "5a956e9577fdb1c889b3ae6ba9685b424216ee7ab558be1bd0344dd7e742980f",
-    "src/vendors/csfrwebdeps/js/util.bitcore.js": "d482a0d5cf33f26b3dd021318d5f189b26806b926f47d6deb594dbe0d0a1cca9",
-    "src/vendors/csfrwebdeps/js/util.api.js": "149a6ffdfb5b93a6a871c66d56e16af4bb0378a86b77bac1339edc3e636df1c2",
-    "src/vendors/csfrwebdeps/js/util.bitcoin.js": "73cf5fff5ba032b5fd95838936183a5cdb32cc31f83bf4f3af3097d963411020",
-    "src/vendors/csfrwebdeps/js/util.knockout.js": "b98dff26e7cb2875f2685ce4968070cdd180bb5bc71a3aa5e7957b02f8d6f539"
+    "src/vendors/csfrwebdeps/js/external/mnemonic.js": "463b7bb1c2bc0cc3824106a4be68ea2ff166c667fbb39379a417ac2dda63a18a",
+    "src/vendors/csfrwebdeps/js/external/qrcode.js": "3f7944d28ba419256acf5cdfc5300cf4d519f1f65065305e62e6080d4b8e53e1",
+    "src/vendors/csfrwebdeps/js/consts.js": "3f4e64a74f40ebbe5e33329597978303ae76f260580dd0eb9a1c897767c79c07",
+    "src/vendors/csfrwebdeps/js/util.generic.js": "8ac844305bf8609206f83391ddd26485508a3b36ef0c1c96c50e3b059b99b84d",
+    "src/vendors/csfrwebdeps/js/util.analytics.js": "e2ae8dd7b29ab24b2b5265b139bd558a90b470eb639a6bd7ad1ffd29c4826a53",
+    "src/vendors/csfrwebdeps/js/util.bitcore.js": "2fc2684c1761b8d57c22a48aaf110f5686ca20e85022012414b85bc24f267b2c",
+    "src/vendors/csfrwebdeps/js/util.api.js": "008c7ff2746034eeab5e9c4621a0c4dc0614c4a79ea217f657929c2fb5d17675",
+    "src/vendors/csfrwebdeps/js/util.bitcoin.js": "07957865ef9513f9ef4d3e37716eb4b7bc30070a420024a5d48ae6996fa28be8",
+    "src/vendors/csfrwebdeps/js/util.knockout.js": "02011347b2504b2f355d42f3344f284049341affa5453e9ff8883cc57631468a"
 }
