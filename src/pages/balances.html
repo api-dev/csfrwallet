@@ -51,8 +51,8 @@
 
 <div class="alert alert-info" id="alertBuyXcp">
     <i class="fa-fw fa fa-exchange"></i>
-    <span data-bind="visible: !QUICK_BUY_ENABLE, locale: 'want_to_buy_xcp'"></span>
-    <span data-bind="visible: QUICK_BUY_ENABLE, locale: 'want_to_buy_xcp_with_quick_buy'"></span>
+    <span data-bind="visible: !QUICK_BUY_ENABLE, locale: 'want_to_buy_csfr'"></span>
+    <span data-bind="visible: QUICK_BUY_ENABLE, locale: 'want_to_buy_csfr_with_quick_buy'"></span>
 </div>
 
 <div id="gettingStartedNotice" data-bind="fadeVisibleInOnly: WALLET.isNew() && !WALLET.isOldWallet() && window._BALANCES_HAS_LOADED_ALREADY === undefined" class="alert alert-success alert-block">
@@ -105,7 +105,7 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" data-bind="locale: 'filter_by'"></a>
                         <ul class="dropdown-menu">
                           <li><a data-bind="click: showAllAssets, locale: 'show_all'" href="#"></a></li>
-                          <li><a data-bind="click: showBaseAssetsOnly, locale: 'show_xcp_btc'" href="#"></a></li>
+                          <li><a data-bind="click: showBaseAssetsOnly, locale: 'show_csfr_sfr'" href="#"></a></li>
                           <li><a data-bind="click: showMyAssetsOnly, locale: 'show_my_tokens'" href="#"></a></li>
                           <li><a data-bind="click: showOthersAssetsOnly, locale: 'show_other_tokens'" href="#"></a></li>
                         </ul>
@@ -442,7 +442,7 @@
       </div>
       <div class="modal-body no-padding">
         <p class="formPadded">
-          <span data-bind="locale: 'create_xcp_testnet'"></span><br/><br/>
+          <span data-bind="locale: 'create_csfr_testnet'"></span><br/><br/>
           <span data-bind="visible: 1 - btcAlreadyBurned() > 0">
             <b data-bind="locale: 'burn_up_to', localeArgs: maxPossibleBurn()"></b>
           </span>
@@ -506,7 +506,7 @@
         <h4 class="modal-title" data-bind="locale: 'create_issue_token'"></h4>
       </div>
       <div class="modal-body no-padding">
-        <p class="formPadded" data-bind="locale: 'asset_creation_fee_xcp', localeArgs: ASSET_CREATION_FEE_XCP"></p>
+        <p class="formPadded" data-bind="locale: 'asset_creation_fee_csfr', localeArgs: ASSET_CREATION_FEE_XCP"></p>
 
         <form class="smart-form" data-bind="submit: doAction"><fieldset>
           <section><div class="row">
@@ -767,7 +767,7 @@
             </div>
           </div></section>
         </fieldset></form>
-        <div class="formPaddedBot" data-bind="fadeVisibleInOnly: xcpBalRemainingPostCallIsSet, locale: 'xcp_bal_remaining_post_call', localeArgs: {0: dispCallPrice, 1: asset, 2: dispTotalIssued, 3: dispTotalOutstanding, 4: percentageToCall, 5: totalXCPPay, 6: dispXCPBalRemainingPostCallCss, 7: dispXCPBalRemainingPostCall, 8: dispUnitsToCallback, 9: asset, 10: dispUnitsAfterCallback, 11: asset}"></div>
+        <div class="formPaddedBot" data-bind="fadeVisibleInOnly: xcpBalRemainingPostCallIsSet, locale: 'csfr_bal_remaining_post_call', localeArgs: {0: dispCallPrice, 1: asset, 2: dispTotalIssued, 3: dispTotalOutstanding, 4: percentageToCall, 5: totalXCPPay, 6: dispXCPBalRemainingPostCallCss, 7: dispXCPBalRemainingPostCall, 8: dispUnitsToCallback, 9: asset, 10: dispUnitsAfterCallback, 11: asset}"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-bind="click: hide, locale: 'cancel'"></button>
