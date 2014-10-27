@@ -80,7 +80,7 @@ var AssetLeaderboardViewModel = CClass.create(function() {
     for(i=0; i < marketInfo.length; i++) {
       marketInfo[i]['position_btc'] = i + 1;
     }
-    assert(self.marketCapTables()[1]['base'] == 'BTC');
+    assert(self.marketCapTables()[1]['base'] == 'SFR');
     for(i=0; i < marketInfo.length; i++) {
       if(!marketInfo[i]['price_in_btc']) continue;
       self.marketCapTables()[1]['data'].push({

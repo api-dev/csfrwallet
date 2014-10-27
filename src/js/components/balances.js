@@ -652,7 +652,7 @@ function SweepModalViewModel() {
     var sweepBTC = false;
     for(var i = 0; i < self.selectedAssetsToSweep().length; i++) {
       var assetName = self.selectedAssetsToSweep()[i];
-      if (assetName=='BTC') sweepBTC = true;
+      if (assetName=='SFR') sweepBTC = true;
     }
     if (sweepBTC) {
       self.missingBtcForFees += REGULAR_DUST_SIZE;

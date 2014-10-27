@@ -8,7 +8,7 @@ function MessageFeed() {
 
   self.sellBTCOrdersCount = ko.computed(function() {
     return $.map(self.OPEN_ORDERS, function(item) {       
-        return ('BTC' == item['get_asset']) ? item : null;
+        return ('SFR' == item['get_asset']) ? item : null;
     }).length;
   }, self);
 
@@ -281,7 +281,7 @@ function MessageFeed() {
     }
 
     if (displayTx) {
-      var asset1 = message['bindings']['asset'] || 'BTC';
+      var asset1 = message['bindings']['asset'] || 'SFR';
       WALLET.getAssetsDivisibility([asset1], function(divisibility) {
 
         message['bindings']['divisible'] = divisibility[asset1];
@@ -510,8 +510,8 @@ function MessageFeed() {
       
       //Look to order matches when determining to do a BTCpay
       //If the order_matches message doesn't have a tx0_address/tx1_address field, then we don't need to do anything with it
-      if ((WALLET.getAddressObj(message['tx0_address']) && message['forward_asset'] == 'BTC' && message['_status'] == 'pending')
-         || (WALLET.getAddressObj(message['tx1_address']) && message['backward_asset'] == 'BTC' && message['_status'] == 'pending')) {
+      if ((WALLET.getAddressObj(message['tx0_address']) && message['forward_asset'] == 'SFR' && message['_status'] == 'pending')
+         || (WALLET.getAddressObj(message['tx1_address']) && message['backward_asset'] == 'SFR' && message['_status'] == 'pending')) {
         //Register this as an "upcoming" BTCpay
         var btcPayData = WaitingBTCPayFeedViewModel.makeBTCPayData(message); 
         //Don't include in UPCOMING_BTCPAY_FEED BTCpays which are for less than the current (multisig) dust amount
@@ -521,8 +521,8 @@ function MessageFeed() {
           $.jqlog.debug("dust order_matches "+btcPayData['orderMatchID']+" : "+btcPayData['btcQuantityRaw']);
         }  
         
-      } else if ((WALLET.getAddressObj(message['tx1_address']) && message['forward_asset'] == 'BTC' && message['_status'] == 'pending')
-         || (WALLET.getAddressObj(message['tx0_address']) && message['backward_asset'] == 'BTC' && message['_status'] == 'pending')) {
+      } else if ((WALLET.getAddressObj(message['tx1_address']) && message['forward_asset'] == 'SFR' && message['_status'] == 'pending')
+         || (WALLET.getAddressObj(message['tx0_address']) && message['backward_asset'] == 'SFR' && message['_status'] == 'pending')) {
 
         PENDING_ACTION_FEED.add(txHash, category, message);
       }
