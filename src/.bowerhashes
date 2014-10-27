@@ -62,7 +62,7 @@
     "src/vendors/csfrwebdeps/js/consts.js": "6b38c2808a64351a36edcf719978d45c6ac781877a2a82bca002d2fe5be63ada",
     "src/vendors/csfrwebdeps/js/util.generic.js": "8ac844305bf8609206f83391ddd26485508a3b36ef0c1c96c50e3b059b99b84d",
     "src/vendors/csfrwebdeps/js/util.analytics.js": "e2ae8dd7b29ab24b2b5265b139bd558a90b470eb639a6bd7ad1ffd29c4826a53",
-    "src/vendors/csfrwebdeps/js/util.bitcore.js": "10addb3cc691659ef080687f42aa9f345b43fc5a9d294abf9702c2328c84963e",
+    "src/vendors/csfrwebdeps/js/util.bitcore.js": "47b4aca3e2e318812edbfdccd49e8f9b2b2d1d311da2c1f0a91a93b84d4f900a",
     "src/vendors/csfrwebdeps/js/util.api.js": "008c7ff2746034eeab5e9c4621a0c4dc0614c4a79ea217f657929c2fb5d17675",
     "src/vendors/csfrwebdeps/js/util.bitcoin.js": "07957865ef9513f9ef4d3e37716eb4b7bc30070a420024a5d48ae6996fa28be8",
     "src/vendors/csfrwebdeps/js/util.knockout.js": "02011347b2504b2f355d42f3344f284049341affa5453e9ff8883cc57631468a"
