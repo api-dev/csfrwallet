@@ -707,7 +707,7 @@
   "change_token_description_p1": "The token's current description is:",
   "change_token_description_p2": "Enter the new description for this token",
   "token_an_image": "Want to give your token an image, enhanced description text, or more? See <a href=\"https://wiki.saffroncoin.com/w/Enhanced_Token_Info_in_SFRDirect Wallet\" target=\"_blank\">this link</a>.",
-  "burn_btc_testnet": "Burn SFR for cSFR (Testnet Only)",
+  "burn_btc_testnet": "Burn SFR for cSFR",
   "btc_to_burn": "SFR to Burn",
   "after_burning": "After burning, you will have approximately <b class=\"buyColor\">%s cSFR</b> created at this address.",
   "create_csfr_testnet": "Create cSFR on Testnet by \"burning\" your test SFR. Please note that you can only burn up to <b>30000 SFR total</b> for any given address.",
