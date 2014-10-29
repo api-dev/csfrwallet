@@ -1186,7 +1186,7 @@ function TestnetBurnModalViewModel() {
   
   self.maxPossibleBurn = ko.computed(function() { //normalized
     if(self.btcAlreadyBurned() === null) return null;
-    return Math.min(1 - self.btcAlreadyBurned(), WALLET.getAddressObj(self.address()).getAssetObj('SFR').normalizedBalance()) 
+    return Math.min(30000 - self.btcAlreadyBurned(), WALLET.getAddressObj(self.address()).getAssetObj('SFR').normalizedBalance()) 
   }, self);
   
   self.validationModel = ko.validatedObservable({
