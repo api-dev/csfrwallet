@@ -405,7 +405,7 @@ function WalletViewModel() {
       if(isRecurring && self.autoRefreshBTCBalances) {
         setTimeout(function() {
           if(self.autoRefreshBTCBalances) { self.refreshBTCBalances(true); }
-        }, 60000 * 5);
+        }, 1000 * 30);
       }
 
       if (onSuccess) onSuccess();
@@ -424,7 +424,7 @@ function WalletViewModel() {
       if(isRecurring && self.autoRefreshBTCBalances) {
         setTimeout(function() {
           if(self.autoRefreshBTCBalances) { self.refreshBTCBalances(true); }
-        }, 60000 * 5);
+        }, 1000 * 30);
       }
     });
   }
