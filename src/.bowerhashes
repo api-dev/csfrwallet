@@ -59,7 +59,7 @@
     "src/vendors/i18next/i18next.min.js": "436aed3d5ea5479c3069d26a2136599bd1e4b7e60ce4dd790c0146b911652422",
     "src/vendors/csfrwebdeps/js/external/mnemonic.js": "463b7bb1c2bc0cc3824106a4be68ea2ff166c667fbb39379a417ac2dda63a18a",
     "src/vendors/csfrwebdeps/js/external/qrcode.js": "3f7944d28ba419256acf5cdfc5300cf4d519f1f65065305e62e6080d4b8e53e1",
-    "src/vendors/csfrwebdeps/js/consts.js": "c9db13c64712ad2c92d4f3a3e3973254a07370241013280d5d7f9d4880065380",
+    "src/vendors/csfrwebdeps/js/consts.js": "3cf3fdba9a92ad00a4cd4b1ae8809b55a20cd8a9b020e9caa1331aeacdef3408",
     "src/vendors/csfrwebdeps/js/util.generic.js": "8ac844305bf8609206f83391ddd26485508a3b36ef0c1c96c50e3b059b99b84d",
     "src/vendors/csfrwebdeps/js/util.analytics.js": "e2ae8dd7b29ab24b2b5265b139bd558a90b470eb639a6bd7ad1ffd29c4826a53",
     "src/vendors/csfrwebdeps/js/util.bitcore.js": "47b4aca3e2e318812edbfdccd49e8f9b2b2d1d311da2c1f0a91a93b84d4f900a",
